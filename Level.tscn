@@ -5,6 +5,7 @@
 [sub_resource type="PlaneMesh" id=1]
 
 custom_aabb = AABB( 0, 0, 0, 0, 0, 0 )
+flip_faces = false
 size = Vector2( 32, 32 )
 subdivide_width = 0
 subdivide_depth = 0
@@ -20,6 +21,7 @@ flags_use_point_size = false
 flags_world_triplanar = false
 flags_fixed_size = false
 flags_albedo_tex_force_srgb = false
+flags_do_not_receive_shadows = false
 vertex_color_use_as_albedo = false
 vertex_color_is_srgb = false
 params_diffuse_mode = 0
@@ -68,7 +70,6 @@ plane = Plane( 0, 1, 0, 0 )
 [node name="Spatial" type="Spatial" index="0"]
 
 [node name="MeshInstance" type="MeshInstance" parent="." index="0"]
-
 layers = 1
 material_override = null
 cast_shadow = 1
@@ -84,7 +85,6 @@ material/0 = SubResource( 2 )
 _sections_unfolded = [ "Geometry", "material" ]
 
 [node name="StaticBody" type="StaticBody" parent="MeshInstance" index="0"]
-
 input_ray_pickable = true
 input_capture_on_drag = false
 collision_layer = 1
@@ -95,13 +95,10 @@ constant_linear_velocity = Vector3( 0, 0, 0 )
 constant_angular_velocity = Vector3( 0, 0, 0 )
 
 [node name="CollisionShape" type="CollisionShape" parent="MeshInstance/StaticBody" index="0"]
-
 shape = SubResource( 3 )
 disabled = false
 
 [node name="Player" parent="." index="1" instance=ExtResource( 1 )]
-
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0 )
 _sections_unfolded = [ "Axis Lock", "Transform", "collision" ]
-
 
