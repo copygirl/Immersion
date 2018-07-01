@@ -1,0 +1,19 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Immersion", "Immersion.csproj", "{5A3F7AD3-446B-454A-A221-07ADC9C2DB4B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+	Debug|Any CPU = Debug|Any CPU
+	Release|Any CPU = Release|Any CPU
+	Tools|Any CPU = Tools|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5A3F7AD3-446B-454A-A221-07ADC9C2DB4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A3F7AD3-446B-454A-A221-07ADC9C2DB4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A3F7AD3-446B-454A-A221-07ADC9C2DB4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A3F7AD3-446B-454A-A221-07ADC9C2DB4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A3F7AD3-446B-454A-A221-07ADC9C2DB4B}.Tools|Any CPU.ActiveCfg = Tools|Any CPU
+		{5A3F7AD3-446B-454A-A221-07ADC9C2DB4B}.Tools|Any CPU.Build.0 = Tools|Any CPU
+	EndGlobalSection
+EndGlobal
