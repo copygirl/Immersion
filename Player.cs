@@ -9,7 +9,7 @@ public class Player : KinematicBody
 	private Vector3 _velocity = Vector3.Zero;
 	
 	public float MouseSensitivity { get; set; } = 0.2F;
-	public float Gravity { get; set; } = -9.8F;
+	public float Gravity { get; set; } = -19.8F;
 	public float MaxMoveSpeed { get; set; } = 20.0F;
 	public float MoveAcceleration { get; set; } = -4.5F;
 	public float MoveDeacceleration { get; set; } = -16.0F;
@@ -41,13 +41,16 @@ public class Player : KinematicBody
 		// var lookVector = _camera.GetGlobalTransform();
 		// movementVector.Rotated(_rotation.Rotation.y);
 		
-		GD.Print($"Floor: { IsOnFloor() }, Wall: { IsOnWall() }, Ceil: { IsOnCeiling() }");
+		// if (Input.IsActionJustPressed("move_jump") && IsOnFloor())
+		// 	_velocity.y = JumpVelocity;
 		
-		if (Input.IsActionJustPressed("move_jump") && IsOnFloor())
-			_velocity.y = JumpVelocity;
-		
+		var before = IsOnFloor();
 		_velocity = MoveAndSlide(_velocity, Vector3.Up, floorMaxAngle: Mathf.Deg2Rad(MaxSlopeAngle));
 		// GD.Print($"Velocity: { _velocity }");
+		var after = IsOnFloor();
+		GD.Print($"Before: { before }, After: { after }");
+		// Just jump automatically if either call to IsOnFloor returned true.
+		if (before || after) _velocity.y = JumpVelocity;
 	}
 	
 	public override void _UnhandledInput(InputEvent @event)
