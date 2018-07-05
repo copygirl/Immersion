@@ -82,7 +82,6 @@ lod_max_hysteresis = 0.0
 mesh = SubResource( 1 )
 skeleton = NodePath("..")
 material/0 = SubResource( 2 )
-_sections_unfolded = [ "Geometry", "material" ]
 
 [node name="StaticBody" type="StaticBody" parent="MeshInstance" index="0"]
 input_ray_pickable = true
@@ -100,6 +99,4 @@ disabled = false
 
 [node name="Player" parent="." index="1" instance=ExtResource( 1 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 0 )
-collision/safe_margin = 0.1
-_sections_unfolded = [ "Axis Lock", "Transform", "collision" ]
 
