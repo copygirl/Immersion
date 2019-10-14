@@ -7,6 +7,7 @@ namespace Immersion
 {
 	public class World : Spatial
 	{
+		private readonly Random _rnd = new Random();
 		private readonly Dictionary<ChunkPos, MeshInstance> _chunks
 			= new Dictionary<ChunkPos, MeshInstance>();
 		
@@ -20,12 +21,11 @@ namespace Immersion
 		
 		public void GenerateChunk(int x, int y, int z)
 		{
-			var rnd = new RandomNumberGenerator();
 			var chunk = new ChunkVoxelStorage();
 			for (var cx = 0; cx < 16; cx++)
 			for (var cy = 0; cy < 16; cy++)
 			for (var cz = 0; cz < 16; cz++)
-				chunk[cx, cy, cz] = (rnd.RandiRange(0, y * 16 + cy) == 0) ? (byte)1 : (byte)0;
+				chunk[cx, cy, cz] = (_rnd.Next(y * 16 + cy + 1) == 0) ? (byte)1 : (byte)0;
 			
 			var mesh  = new ChunkMeshGenerator().Generate(chunk);
 			var shape = mesh.CreateTrimeshShape();
