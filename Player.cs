@@ -1,141 +1,111 @@
 using System;
 using Godot;
 
-public class Player : KinematicBody
+namespace Immersion
 {
-	private Camera _camera;
-	private Spatial _rotation;
-	
-	private Vector3 _velocity = Vector3.Zero;
-	
-	public float MouseSensitivity { get; set; } = 0.2F;
-	public float Gravity { get; set; } = -19.8F;
-	public float MaxMoveSpeed { get; set; } = 20.0F;
-	public float MoveAccel { get; set; } = 4.5F;
-	public float MoveDeaccel { get; set; } = 16.0F;
-	public float JumpVelocity { get; set; } = 16.0F;
-	
-	public override void _Ready()
+	public class Player : KinematicBody
 	{
-		_rotation = (Spatial)GetNode("Rotation");
-		_camera   = (Camera)GetNode("Rotation/Camera");
-		Input.SetMouseMode(Input.MouseMode.Captured);
-	}
-	
-	public override void _Process(float delta)
-	{
-	}
-	
-	public override void _PhysicsProcess(float delta)
-	{
-		_velocity.y += delta * Gravity;
+		private Camera _camera;
+		private Spatial _rotation;
 		
-		var movementVector = Vector2.Zero;
-		if (Input.IsActionPressed("move_forward")) movementVector.y += 1;
-		if (Input.IsActionPressed("move_back")) movementVector.y -= 1;
-		if (Input.IsActionPressed("move_strafe_left")) movementVector.x -= 1;
-		if (Input.IsActionPressed("move_strafe_right")) movementVector.x += 1;
+		private Vector3 _velocity = Vector3.Zero;
+		private DateTime? _jumpPressed = null;
+		private DateTime? _lastOnFloor = null;
 		
-		var dir = Vector3.Zero;
-		var camTransform = _camera.GlobalTransform;
-		dir += -camTransform.basis.z.Normalized() * movementVector.y;
-		dir +=  camTransform.basis.x.Normalized() * movementVector.x;
-		dir.y = 0;
-		dir = dir.Normalized() * Math.Min(1.0F, movementVector.Length());
 		
-		var hvel = _velocity;
-		hvel.y = 0;
+		public float MouseSensitivity { get; set; } = 0.2F;
 		
-		var target = dir * MaxMoveSpeed;
-		var accel  = (dir.Dot(hvel) > 0) ? MoveAccel : MoveDeaccel;
-		hvel = hvel.LinearInterpolate(target, accel * delta);
+		/// <summary>  Time after pressing the jump button a jump may occur late. </summary>
+		public TimeSpan JumpEarlyTime { get; set; } = TimeSpan.FromSeconds(0.2);
 		
-		_velocity.x = hvel.x;
-		_velocity.z = hvel.z;
+		/// <summary> Time after leaving a jumpable surface when a jump may still occur. </summary>
+		public TimeSpan JumpCoyoteTime { get; set; } = TimeSpan.FromSeconds(0.2);
 		
-		if (Input.IsActionJustPressed("move_jump") && OnFloor)
-			_velocity.y = JumpVelocity;
 		
-		_velocity = MoveAndSlideNew(_velocity, delta);
-	}
-	
-	public override void _UnhandledInput(InputEvent @event)
-	{
-		if (@event.IsActionPressed("ui_cancel"))
+		public float Gravity       { get; set; } = -12.0F;
+		public float JumpVelocity  { get; set; } =   5.0F;
+		public float MoveAccel     { get; set; } =   6.0F;
+		public float MaxMoveSpeed  { get; set; } =   4.0F;
+		public float FrictionFloor { get; set; } =  12.0F;
+		public float FrictionAir   { get; set; } =   2.0F;
+		
+		public float FloorMaxAngle { get; set; } = Mathf.Deg2Rad(45.0F);
+		
+		
+		public override void _Ready()
 		{
-			Input.SetMouseMode((Input.GetMouseMode() == Input.MouseMode.Visible)
-				? Input.MouseMode.Captured : Input.MouseMode.Visible);
+			_rotation = (Spatial)GetNode("Rotation");
+			_camera   = (Camera)GetNode("Rotation/Camera");
+			Input.SetMouseMode(Input.MouseMode.Captured);
 		}
-		else if (@event is InputEventMouseMotion motion)
+		
+		public override void _Process(float delta)
 		{
-			if (Input.GetMouseMode() != Input.MouseMode.Captured) return;
-			
-			_camera.RotateX(Mathf.Deg2Rad(motion.Relative.y * -MouseSensitivity));
-			_rotation.RotateY(Mathf.Deg2Rad(motion.Relative.x * -MouseSensitivity));
-			
-			var rotation = _camera.RotationDegrees;
-			rotation.x = Mathf.Clamp(rotation.x, -80, 80);
-			_camera.RotationDegrees = rotation;
-		}
-	}
-	
-	
-	// Move and slide, reimplemented.
-	
-	private Vector3 _floorVelocity;
-	
-	private Vector3 _floorNormal = Vector3.Up;
-	private float _slopeStopMinVelocity = 0.05F;
-	private float _maxSlides = 4;
-	private bool _infiniteInertia = true;
-	
-	public float MaxSlopeAngle { get; set; } = Mathf.Deg2Rad(40.0F);
-	
-	public bool OnFloor { get; private set; }
-	public bool OnWall { get; private set; }
-	public bool OnCeiling { get; private set; }
-	
-	public Vector3 MoveAndSlideNew(Vector3 linearVelocity, float delta)
-	{
-		var lv     = linearVelocity;
-		var motion = (_floorVelocity + lv) * delta;
-		
-		OnFloor   = false;
-		OnWall    = false;
-		OnCeiling = false;
-		_floorVelocity = Vector3.Zero;
-		
-		for (var slides = _maxSlides; slides >= 0; slides--) {
-			var collision = MoveAndCollide(motion, _infiniteInertia);
-			if (collision == null) break;
-			GD.Print(collision);
-			
-			if (_floorNormal != Vector3.Zero) {
-				if (collision.Normal.Dot(_floorNormal) >= Math.Cos(MaxSlopeAngle)) {
-					OnFloor = true;
-					_floorVelocity = collision.ColliderVelocity;
-					
-					var rel_v = lv - _floorVelocity;
-					var hv = rel_v - _floorNormal * _floorNormal.Dot(rel_v);
-					
-					if ((collision.Travel.Length() < 0.05F) && (hv.Length() < _slopeStopMinVelocity)) {
-						var gt = GlobalTransform;
-						gt.origin -= collision.Travel;
-						GlobalTransform = gt;
-						return _floorVelocity - _floorNormal * _floorNormal.Dot(_floorVelocity);
-					}
-				} else if (collision.Normal.Dot(-_floorNormal) >= Math.Cos(MaxSlopeAngle)) {
-					OnCeiling = true;
-				} else OnWall = true;
-			} else OnWall = true;
-			
-			var n = collision.Normal;
-			motion = motion.Slide(n);
-			lv = lv.Slide(n);
-			
-			if (motion == Vector3.Zero) break;
 		}
 		
-		return lv;
+		public override void _PhysicsProcess(float delta)
+		{
+			_velocity.y += delta * Gravity;
+			
+			var movementVector = new Vector2(
+				Input.GetActionStrength("move_strafe_right") - Input.GetActionStrength("move_strafe_left"),
+				Input.GetActionStrength("move_forward")      - Input.GetActionStrength("move_backward"));
+			if (movementVector.LengthSquared() > 1.0F)
+				movementVector = movementVector.Normalized();
+			
+			var dir = Vector3.Zero;
+			var camTransform = _camera.GlobalTransform;
+			dir += -camTransform.basis.z.Normalized() * movementVector.y;
+			dir +=  camTransform.basis.x.Normalized() * movementVector.x;
+			dir.y = 0;
+			dir = dir.Normalized() * movementVector.Length();
+			
+			var hvel = _velocity;
+			hvel.y = 0;
+			
+			var target   = dir * MaxMoveSpeed;
+			var friction = IsOnFloor() ? FrictionFloor : FrictionAir;
+			var accel    = (dir.Dot(hvel) > 0) ? MoveAccel : friction;
+			hvel = hvel.LinearInterpolate(target, accel * delta);
+			
+			_velocity.x = hvel.x;
+			_velocity.z = hvel.z;
+			
+			// Sometimes, when pushing into a wall, jumping wasn't working.
+			// Possibly due to `IsOnFloor` returning `false` for some reason.
+			// The `JumpEarlyTime` feature seems to avoid this issue, thankfully.
+			if (IsOnFloor()) _lastOnFloor = DateTime.Now;
+			if (Input.IsActionJustPressed("move_jump"))
+				_jumpPressed = DateTime.Now;
+			if (((DateTime.Now - _jumpPressed) <= JumpEarlyTime)
+			 && ((DateTime.Now - _lastOnFloor) <= JumpCoyoteTime)) {
+				_velocity.y  = JumpVelocity;
+				_jumpPressed = null;
+				_lastOnFloor = null;
+			}
+			
+			_velocity = MoveAndSlide(_velocity, Vector3.Up,
+				floorMaxAngle: FloorMaxAngle);
+		}
+		
+		public override void _UnhandledInput(InputEvent ev)
+		{
+			if (ev.IsActionPressed("ui_cancel"))
+			{
+				Input.SetMouseMode((Input.GetMouseMode() == Input.MouseMode.Visible)
+					? Input.MouseMode.Captured : Input.MouseMode.Visible);
+			}
+			else if (ev is InputEventMouseMotion motion)
+			{
+				if (Input.GetMouseMode() != Input.MouseMode.Captured) return;
+				
+				_camera.RotateX(Mathf.Deg2Rad(motion.Relative.y * -MouseSensitivity));
+				_rotation.RotateY(Mathf.Deg2Rad(motion.Relative.x * -MouseSensitivity));
+				
+				var rotation = _camera.RotationDegrees;
+				rotation.x = Mathf.Clamp(rotation.x, -80, 80);
+				_camera.RotationDegrees = rotation;
+			}
+		}
 	}
 }
