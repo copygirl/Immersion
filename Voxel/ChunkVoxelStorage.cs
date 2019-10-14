@@ -3,7 +3,6 @@ using System;
 namespace Immersion.Voxel
 {
 	public class ChunkVoxelStorage
-		: IVoxelView<byte>
 	{
 		private readonly byte[] _array = new byte[16 * 16 * 16];
 		
@@ -11,10 +10,8 @@ namespace Immersion.Voxel
 		public int Height { get; } = 16;
 		public int Depth  { get; } = 16;
 		
-		public byte this[int x, int y, int z] {
-			get => _array[GetIndex(x, y, z)];
-			set => _array[GetIndex(x, y, z)] = value;
-		}
+		public ref byte this[int x, int y, int z]
+			=> ref _array[GetIndex(x, y, z)];
 		
 		private const int VALID_INDEX = ~0b1111;
 		private static int GetIndex(int x, int y, int z)

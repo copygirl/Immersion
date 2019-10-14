@@ -49,15 +49,16 @@ namespace Immersion.Voxel
 		
 		private static readonly int[] TRIANGLE_INDICES = { 0, 3, 1,  1, 3, 2 };
 		
-		public ArrayMesh Generate(ChunkVoxelStorage chunk,
-		                          Material material, TextureAtlas<byte> atlas)
+		public Material Material { get; set; }
+		public TextureAtlas<byte> TextureAtlas { get; set; }
+		
+		public ArrayMesh Generate(ChunkVoxelStorage[,,] chunks)
 		{
-			if (chunk == null) throw new ArgumentNullException(nameof(chunk));
-			
 			var st = new SurfaceTool();
 			st.Begin(Mesh.PrimitiveType.Triangles);
-			st.SetMaterial(material);
+			st.SetMaterial(Material);
 			
+			var chunk = chunks[1,1,1];
 			for (var x = 0; x < 16; x++)
 			for (var y = 0; y < 16; y++)
 			for (var z = 0; z < 16; z++) {
@@ -65,10 +66,10 @@ namespace Immersion.Voxel
 				// TODO: Replace with IBlock.IsAir
 				if (block == 0) continue;
 				
-				var textureCell = atlas[block];
+				var textureCell = TextureAtlas[block];
 				var blockVertex = new Vector3(x, y, z);
 				foreach (var facing in BlockFacingHelper.ALL_FACINGS) {
-					var neighbor = GetNeighborBlock(chunk, x, y, z, facing);
+					var neighbor = GetNeighborBlock(chunks, x, y, z, facing);
 					// TODO: Replace with IBlock.IsSideCulled
 					if (neighbor != 0) continue;
 					
@@ -95,20 +96,19 @@ namespace Immersion.Voxel
 			return st.Commit();
 		}
 		
-		private const int VALID_INDEX = ~0b1111;
-		private byte GetNeighborBlock(ChunkVoxelStorage chunk,
+		private byte GetNeighborBlock(ChunkVoxelStorage[,,] chunks,
 		                              int x, int y, int z, BlockFacing facing)
 		{
+			var cx = 1; var cy = 1; var cz = 1;
 			switch (facing) {
-				case BlockFacing.East  : x += 1; break;
-				case BlockFacing.West  : x -= 1; break;
-				case BlockFacing.Up    : y += 1; break;
-				case BlockFacing.Down  : y -= 1; break;
-				case BlockFacing.South : z += 1; break;
-				case BlockFacing.North : z -= 1; break;
+				case BlockFacing.East  : x += 1; if (x >= 16) cx += 1; break;
+				case BlockFacing.West  : x -= 1; if (x <   0) cx -= 1; break;
+				case BlockFacing.Up    : y += 1; if (y >= 16) cy += 1; break;
+				case BlockFacing.Down  : y -= 1; if (y <   0) cy -= 1; break;
+				case BlockFacing.South : z += 1; if (z >= 16) cz += 1; break;
+				case BlockFacing.North : z -= 1; if (z <   0) cz -= 1; break;
 			}
-			return ((x & VALID_INDEX) == 0) && ((y & VALID_INDEX) == 0) && ((z & VALID_INDEX) == 0)
-				? chunk[x, y, z] : (byte)0;
+			return chunks[cx, cy, cz]?[x & 0b1111, y & 0b1111, z & 0b1111] ?? (byte)0;
 		}
 	}
 }
