@@ -49,7 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Player.cs" />
-    <Compile Include="SetChunkMesh.cs" />
+    <Compile Include="World.cs" />
     <Compile Include="Properties/AssemblyInfo.cs" />
     <Compile Include="Voxel/BlockFacing.cs" />
     <Compile Include="Voxel/ChunkMeshGenerator.cs" />
