@@ -21,7 +21,6 @@ namespace Immersion
 		/// <summary> Time after leaving a jumpable surface when a jump may still occur. </summary>
 		public TimeSpan JumpCoyoteTime { get; set; } = TimeSpan.FromSeconds(0.2);
 		
-		
 		public float Gravity       { get; set; } = -12.0F;
 		public float JumpVelocity  { get; set; } =   5.0F;
 		public float MoveAccel     { get; set; } =   6.0F;
@@ -34,8 +33,8 @@ namespace Immersion
 		
 		public override void _Ready()
 		{
-			_rotation = (Spatial)GetNode("Rotation");
-			_camera   = (Camera)GetNode("Rotation/Camera");
+			_rotation = GetNode<Spatial>("Rotation");
+			_camera   = GetNode<Camera>("Rotation/Camera");
 			Input.SetMouseMode(Input.MouseMode.Captured);
 		}
 		
@@ -74,9 +73,11 @@ namespace Immersion
 			// Sometimes, when pushing into a wall, jumping wasn't working.
 			// Possibly due to `IsOnFloor` returning `false` for some reason.
 			// The `JumpEarlyTime` feature seems to avoid this issue, thankfully.
-			if (IsOnFloor()) _lastOnFloor = DateTime.Now;
 			if (Input.IsActionJustPressed("move_jump"))
 				_jumpPressed = DateTime.Now;
+			if (IsOnFloor())
+				_lastOnFloor = DateTime.Now;
+			
 			if (((DateTime.Now - _jumpPressed) <= JumpEarlyTime)
 			 && ((DateTime.Now - _lastOnFloor) <= JumpCoyoteTime)) {
 				_velocity.y  = JumpVelocity;
