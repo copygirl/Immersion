@@ -38,31 +38,21 @@ namespace Immersion.Voxel
 			new Vector3(0, 1, 0),
 		};
 		
-		private static readonly Color[] COLORS_PER_FACING = {
-			Colors.Red,       // East  (+X)
-			Colors.DarkRed,   // West  (-X)
-			Colors.Green,     // Up    (+Y)
-			Colors.DarkGreen, // Down  (-Y)
-			Colors.Blue,      // South (+Z)
-			Colors.DarkBlue,  // North (-Z)
-		};
-		
-		private static readonly Vector2[] UVS = {
-			new Vector2(0, 0),
-			new Vector2(0, 1),
-			new Vector2(1, 1),
-			new Vector2(1, 0),
-		};
+		// private static readonly Color[] COLORS_PER_FACING = {
+		// 	Colors.Red,       // East  (+X)
+		// 	Colors.DarkRed,   // West  (-X)
+		// 	Colors.Green,     // Up    (+Y)
+		// 	Colors.DarkGreen, // Down  (-Y)
+		// 	Colors.Blue,      // South (+Z)
+		// 	Colors.DarkBlue,  // North (-Z)
+		// };
 		
 		private static readonly int[] TRIANGLE_INDICES = { 0, 3, 1,  1, 3, 2 };
 		
-		public ArrayMesh Generate(ChunkVoxelStorage chunk)
+		public ArrayMesh Generate(ChunkVoxelStorage chunk,
+		                          Material material, TextureAtlas<byte> atlas)
 		{
 			if (chunk == null) throw new ArgumentNullException(nameof(chunk));
-			
-			var material = new SpatialMaterial();
-			//material.SetAlbedo(Colors.White);
-			material.VertexColorUseAsAlbedo = true;
 			
 			var st = new SurfaceTool();
 			st.Begin(Mesh.PrimitiveType.Triangles);
@@ -75,6 +65,7 @@ namespace Immersion.Voxel
 				// TODO: Replace with IBlock.IsAir
 				if (block == 0) continue;
 				
+				var textureCell = atlas[block];
 				var blockVertex = new Vector3(x, y, z);
 				foreach (var facing in BlockFacingHelper.ALL_FACINGS) {
 					var neighbor = GetNeighborBlock(chunk, x, y, z, facing);
@@ -85,9 +76,17 @@ namespace Immersion.Voxel
 					var normal = facing.ToVector3();
 					for (var i = 0; i < 6; i++) {
 						var j = TRIANGLE_INDICES[i];
-						st.AddUv(UVS[j]);
+						Vector2 uv;
+						switch (j) {
+							case 0: uv = textureCell.TopLeft;     break;
+							case 1: uv = textureCell.BottomLeft;  break;
+							case 2: uv = textureCell.BottomRight; break;
+							case 3: uv = textureCell.TopRight;    break;
+							default: throw new InvalidOperationException();
+						}
+						st.AddUv(uv);
 						st.AddNormal(normal);
-						st.AddColor(COLORS_PER_FACING[(int)facing]);
+						// st.AddColor(COLORS_PER_FACING[(int)facing]);
 						st.AddVertex(blockVertex + VERTICES_PER_FACING[vertIndex | j]);
 					}
 				}

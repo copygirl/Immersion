@@ -2,17 +2,45 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using Immersion.Voxel;
+using GDArray = Godot.Collections.Array;
+using GDDict  = Godot.Collections.Dictionary;
 
 namespace Immersion
 {
+#if TOOLS
+	[Tool]
+#endif
 	public class World : Spatial
 	{
 		private readonly Random _rnd = new Random();
-		private readonly Dictionary<ChunkPos, MeshInstance> _chunks
-			= new Dictionary<ChunkPos, MeshInstance>();
+		private readonly Dictionary<ChunkPos, MeshInstance> _chunks =
+			new Dictionary<ChunkPos, MeshInstance>();
+		
+		private Material _material;
+		private TextureAtlas<byte> _atlas;
+		private ChunkMeshGenerator _generator;
+		
+		[Export]
+		public Texture Texture { get; set; }
+		[Export]
+		public int TextureCellSize { get; set; } = 16;
 		
 		public override void _Ready()
 		{
+			_material = new SpatialMaterial {
+				AlbedoTexture = Texture,
+				VertexColorUseAsAlbedo = true,
+			};
+			
+			_atlas = new TextureAtlas<byte>(Texture.GetWidth(), Texture.GetHeight(), TextureCellSize){
+				{ (byte)0, 0, 0 },
+				{ (byte)1, 1, 0 },
+				{ (byte)2, 2, 0 },
+				{ (byte)3, 3, 0 },
+			};
+			
+			_generator = new ChunkMeshGenerator();
+			
 			for (int x = -4; x < 4; x++)
 			for (int y =  0; y < 4; y++)
 			for (int z = -4; z < 4; z++)
@@ -24,10 +52,15 @@ namespace Immersion
 			var chunk = new ChunkVoxelStorage();
 			for (var cx = 0; cx < 16; cx++)
 			for (var cy = 0; cy < 16; cy++)
-			for (var cz = 0; cz < 16; cz++)
-				chunk[cx, cy, cz] = (_rnd.Next(y * 16 + cy + 1) == 0) ? (byte)1 : (byte)0;
+			for (var cz = 0; cz < 16; cz++) {
+				var yy = y * 16 + cy;
+				if (_rnd.Next(yy / 2 + 1) != 0) continue;
+				chunk[cx, cy, cz] = (yy <  8) ? (byte)1
+				                  : (yy < 48) ? (byte)2
+				                              : (byte)3;
+			}
 			
-			var mesh  = new ChunkMeshGenerator().Generate(chunk);
+			var mesh  = _generator.Generate(chunk, _material, _atlas);
 			var shape = mesh.CreateTrimeshShape();
 			// TODO: Create collision mesh from box colliders? Should be cheaper.
 			

@@ -56,6 +56,7 @@
     <Compile Include="Voxel/ChunkVoxelStorage.cs" />
     <Compile Include="Voxel/IBlock.cs" />
     <Compile Include="Voxel/IVoxelView.cs" />
+    <Compile Include="Voxel/TextureAtlas.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)/Microsoft.CSharp.targets" />
 </Project>
