@@ -49,32 +49,41 @@ namespace Immersion.Voxel
 		
 		private static readonly int[] TRIANGLE_INDICES = { 0, 3, 1,  1, 3, 2 };
 		
+		public World World { get; }
 		public Material Material { get; set; }
-		public TextureAtlas<byte> TextureAtlas { get; set; }
+		public TextureAtlas<string> TextureAtlas { get; set; }
 		
-		public ArrayMesh Generate(ChunkVoxelStorage[,,] chunks)
+		public ChunkMeshGenerator(World world, Material material,
+		                          TextureAtlas<string> atlas)
+		{
+			World        = world;
+			Material     = material;
+			TextureAtlas = atlas;
+		}
+		
+		public ArrayMesh Generate(IVoxelView<IBlock>?[,,] chunks)
 		{
 			var st = new SurfaceTool();
 			st.Begin(Mesh.PrimitiveType.Triangles);
 			st.SetMaterial(Material);
 			
-			var chunk = chunks[1,1,1];
+			var chunk = chunks[1, 1, 1]!;
 			for (var x = 0; x < 16; x++)
 			for (var y = 0; y < 16; y++)
 			for (var z = 0; z < 16; z++) {
 				var block = chunk[x, y, z];
-				// TODO: Replace with IBlock.IsAir
-				if (block == 0) continue;
+				if (block.IsAir) continue;
 				
-				var textureCell = TextureAtlas[block];
+				var textureCell = TextureAtlas[block.Texture];
 				var blockVertex = new Vector3(x, y, z);
 				foreach (var facing in BlockFacingHelper.ALL_FACINGS) {
-					var neighbor = GetNeighborBlock(chunks, x, y, z, facing);
-					// TODO: Replace with IBlock.IsSideCulled
-					if (neighbor != 0) continue;
+					if (block.IsSideCulled(facing)) {
+						var neighbor = GetNeighborBlock(chunks, x, y, z, facing);
+						if (neighbor.IsSideCulled(facing.GetOpposite())) continue;
+					}
 					
 					var vertIndex = (int)facing << 2;
-					var normal = facing.ToVector3();
+					st.AddNormal(facing.ToVector3());
 					for (var i = 0; i < 6; i++) {
 						var j = TRIANGLE_INDICES[i];
 						Vector2 uv;
@@ -86,8 +95,6 @@ namespace Immersion.Voxel
 							default: throw new InvalidOperationException();
 						}
 						st.AddUv(uv);
-						st.AddNormal(normal);
-						// st.AddColor(COLORS_PER_FACING[(int)facing]);
 						st.AddVertex(blockVertex + VERTICES_PER_FACING[vertIndex | j]);
 					}
 				}
@@ -96,8 +103,8 @@ namespace Immersion.Voxel
 			return st.Commit();
 		}
 		
-		private byte GetNeighborBlock(ChunkVoxelStorage[,,] chunks,
-		                              int x, int y, int z, BlockFacing facing)
+		private IBlock GetNeighborBlock(IVoxelView<IBlock>?[,,] chunks,
+		                                int x, int y, int z, BlockFacing facing)
 		{
 			var cx = 1; var cy = 1; var cz = 1;
 			switch (facing) {
@@ -108,7 +115,7 @@ namespace Immersion.Voxel
 				case BlockFacing.South : z += 1; if (z >= 16) cz += 1; break;
 				case BlockFacing.North : z -= 1; if (z <   0) cz -= 1; break;
 			}
-			return chunks[cx, cy, cz]?[x & 0b1111, y & 0b1111, z & 0b1111] ?? (byte)0;
+			return chunks[cx, cy, cz]?[x & 0b1111, y & 0b1111, z & 0b1111] ?? Block.AIR;
 		}
 	}
 }

@@ -2,25 +2,21 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using Immersion.Voxel;
-using GDArray = Godot.Collections.Array;
-using GDDict  = Godot.Collections.Dictionary;
 
 namespace Immersion
 {
-#if TOOLS
 	[Tool]
-#endif
 	public class World : Spatial
 	{
 		private readonly Random _rnd = new Random();
 		private readonly Dictionary<ChunkPos, Chunk> _chunks =
 			new Dictionary<ChunkPos, Chunk>();
 		
-		private ChunkMeshGenerator _generator;
-		private OpenSimplexNoise _noise;
+		private ChunkMeshGenerator? _generator;
+		private OpenSimplexNoise? _noise;
 		
 		[Export]
-		public Texture Texture { get; set; }
+		public Texture? Texture { get; set; }
 		[Export]
 		public int TextureCellSize { get; set; } = 16;
 		
@@ -31,17 +27,14 @@ namespace Immersion
 				VertexColorUseAsAlbedo = true,
 			};
 			
-			var atlas = new TextureAtlas<byte>(
-				Texture.GetWidth(), Texture.GetHeight(), TextureCellSize);
-			atlas.Add(0, 0, 0);
-			atlas.Add(1, 1, 0);
-			atlas.Add(2, 2, 0);
-			atlas.Add(3, 3, 0);
+			var atlas = new TextureAtlas<string>(
+				Texture!.GetWidth(), Texture.GetHeight(), TextureCellSize);
+			atlas.Add("air"  , 0, 0);
+			atlas.Add("stone", 1, 0);
+			atlas.Add("dirt" , 2, 0);
+			atlas.Add("grass", 3, 0);
 			
-			_generator = new ChunkMeshGenerator {
-				Material = material,
-				TextureAtlas = atlas,
-			};
+			_generator = new ChunkMeshGenerator(this, material, atlas);
 			
 			_noise = new OpenSimplexNoise {
 				Seed        = _rnd.Next(),
@@ -67,7 +60,7 @@ namespace Immersion
 		public void GenerateChunks(int cx, int cy, int cz)
 		{
 			var chunkPos = new ChunkPos(cx, cy, cz);
-			var chunk    = new Chunk(chunkPos);
+			var chunk    = new Chunk(this, chunkPos);
 			_chunks[chunkPos] = chunk;
 			
 			for (var x = -1; x <= 1; x++)
@@ -79,7 +72,7 @@ namespace Immersion
 				neighbor.ChunkNeighbors[1-x, 1-y, 1-z] = chunk;
 			}
 			
-			chunk.GenerateBlocks(_noise);
+			chunk.GenerateBlocks(_noise!);
 		}
 		
 		public void CoverChunksWithGrass(int cx, int cz)
@@ -87,13 +80,14 @@ namespace Immersion
 			for (var lx = 0; lx < 16; lx++)
 			for (var lz = 0; lz < 16; lz++) {
 				var depth = 4;
-				Chunk chunk = null;
+				Chunk? chunk = null;
 				for (var gy = 63; gy >= 0; gy--) {
 					if (chunk?.ChunkPos.Y != (gy >> 4))
 						chunk = _chunks[new ChunkPos(cx, (gy >> 4), cz)];
-					ref var block = ref chunk.ChunkStorage[lx, gy & 0b1111, lz];
-					if (block != 0) {
-						block = (depth-- == 4) ? (byte)3 : (byte)2;
+					var block = chunk.ChunkStorage[lx, gy & 0b1111, lz];
+					if (block != Block.AIR) {
+						chunk.ChunkStorage[lx, gy & 0b1111, lz] =
+							(depth-- == 4) ? Block.GRASS : Block.DIRT;
 						if (depth <= 0) break;
 					} else if (depth < 4) break;
 				}
@@ -104,7 +98,7 @@ namespace Immersion
 		{
 			var chunkPos = new ChunkPos(cx, cy, cz);
 			var chunk    = _chunks[chunkPos];
-			chunk.GenerateMesh(_generator);
+			chunk.GenerateMesh(_generator!);
 			AddChild(chunk);
 		}
 	}

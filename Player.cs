@@ -5,8 +5,8 @@ namespace Immersion
 {
 	public class Player : KinematicBody
 	{
-		private Camera _camera;
-		private Spatial _rotation;
+		private Camera? _camera;
+		private Spatial? _rotation;
 		
 		private Vector3 _velocity = Vector3.Zero;
 		private DateTime? _jumpPressed = null;
@@ -53,7 +53,7 @@ namespace Immersion
 				movementVector = movementVector.Normalized();
 			
 			var dir = Vector3.Zero;
-			var camTransform = _camera.GlobalTransform;
+			var camTransform = _camera!.GlobalTransform;
 			dir += -camTransform.basis.z.Normalized() * movementVector.y;
 			dir +=  camTransform.basis.x.Normalized() * movementVector.x;
 			dir.y = 0;
@@ -100,8 +100,8 @@ namespace Immersion
 			{
 				if (Input.GetMouseMode() != Input.MouseMode.Captured) return;
 				
-				_camera.RotateX(Mathf.Deg2Rad(motion.Relative.y * -MouseSensitivity));
-				_rotation.RotateY(Mathf.Deg2Rad(motion.Relative.x * -MouseSensitivity));
+				_camera!.RotateX(Mathf.Deg2Rad(motion.Relative.y * -MouseSensitivity));
+				_rotation!.RotateY(Mathf.Deg2Rad(motion.Relative.x * -MouseSensitivity));
 				
 				var rotation = _camera.RotationDegrees;
 				rotation.x = Mathf.Clamp(rotation.x, -80, 80);

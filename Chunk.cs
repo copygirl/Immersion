@@ -1,28 +1,23 @@
-using System;
-using System.Collections.Generic;
 using Godot;
 using Immersion.Voxel;
-using GDArray = Godot.Collections.Array;
-using GDDict  = Godot.Collections.Dictionary;
 
 namespace Immersion
 {
 	public class Chunk : Spatial
 	{
+		public World World { get; }
 		public ChunkPos ChunkPos { get; }
-		public Chunk[,,] ChunkNeighbors { get; } = new Chunk[3,3,3];
-		public ChunkVoxelStorage ChunkStorage { get; } = new ChunkVoxelStorage();
+		public Chunk[,,] ChunkNeighbors { get; } = new Chunk[3, 3, 3];
 		
-		public Chunk(ChunkPos pos)
+		public ChunkPaletteStorage<IBlock> ChunkStorage { get; } =
+			new ChunkPaletteStorage<IBlock>(Block.AIR);
+		
+		public Chunk(World world, ChunkPos pos)
 		{
+			World     = world;
 			ChunkPos  = pos;
-			Transform = new Transform(Basis.Identity, new Vector3(
-				ChunkPos.X << 4, ChunkPos.Y << 4, ChunkPos.Z << 4));
-			ChunkNeighbors[1,1,1] = this;
-		}
-		
-		public override void _Ready()
-		{
+			Transform = new Transform(Basis.Identity, pos.GetOrigin());
+			ChunkNeighbors[1, 1, 1] = this;
 		}
 		
 		public void GenerateBlocks(OpenSimplexNoise noise)
@@ -38,13 +33,13 @@ namespace Immersion
 				var gz = ChunkPos.Z << 4 | lz;
 				var bias = Mathf.Clamp((gy / 48.0F - 0.5F), -0.5F, 1.0F);
 				if (noise.GetNoise3d(gx, gy, gz) > bias)
-					ChunkStorage[lx, ly, lz] = (byte)1;
+					ChunkStorage[lx, ly, lz] = Block.STONE;
 			}
 		}
 		
 		public void GenerateMesh(ChunkMeshGenerator generator)
 		{
-			var chunks = new ChunkVoxelStorage[3,3,3];
+			var chunks = new IVoxelView<IBlock>?[3, 3, 3];
 			for (var x = 0; x < 3; x++)
 			for (var y = 0; y < 3; y++)
 			for (var z = 0; z < 3; z++)
@@ -60,42 +55,5 @@ namespace Immersion
 			AddChild(meshInstance);
 			AddChild(staticBody);
 		}
-	}
-	
-	public struct ChunkPos : IEquatable<ChunkPos>
-	{
-		public int X { get; }
-		public int Y { get; }
-		public int Z { get; }
-		
-		public ChunkPos(int x, int y, int z)
-		{
-			this.X = x;
-			this.Y = y;
-			this.Z = z;
-		}
-		
-		public ChunkPos Add(int x, int y, int z)
-			=> new ChunkPos(X + x, Y + y, Z + z);
-		
-		public bool Equals(ChunkPos other)
-			=> (X == other.X) && (Y == other.Y) && (Z == other.Z);
-		
-		public override bool Equals(object obj)
-			=> (obj is ChunkPos) && Equals((ChunkPos)obj);
-		
-		public override int GetHashCode()
-		{
-			unchecked {
-				int hash = 17;
-				hash = hash * 23 + X;
-				hash = hash * 23 + Y;
-				hash = hash * 23 + Z;
-				return hash;
-			}
-		}
-		
-		public override string ToString()
-			=> $"[{X}:{Y}:{Z}]";
 	}
 }
