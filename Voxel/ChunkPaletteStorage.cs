@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Godot;
 
 namespace Immersion.Voxel
 {
@@ -16,8 +15,8 @@ namespace Immersion.Voxel
 	{
 		private const int SIZE = 16 * 16 * 16;
 		
-		private BitArray _data;
-		private PaletteEntry[] _palette;
+		private BitArray? _data;
+		private PaletteEntry[]? _palette;
 		private int _usedPalettes;
 		private int _indicesLength;
 		
@@ -39,14 +38,7 @@ namespace Immersion.Voxel
 		
 		
 		public ChunkPaletteStorage(T @default)
-		{
-			Default = @default;
-			_data    = new BitArray(SIZE);
-			_palette = new PaletteEntry[2];
-			_usedPalettes  = 1;
-			_indicesLength = 1;
-			_palette[0] = new PaletteEntry { Value = @default, RefCount = SIZE };
-		}
+			=> Default = @default;
 		
 		
 		private T Get(int x, int y, int z)
@@ -54,14 +46,17 @@ namespace Immersion.Voxel
 		
 		private void Set(int x, int y, int z, T value)
 		{
-			if (_palette != null) {
+			if (_palette == null) {
+				if (value == Default) return;
+			} else {
 				var index = GetIndex(x, y, z);
 				ref var current = ref _palette[GetPaletteIndex(index)];
+				if (value == current.Value) return;
 				
 				if (--current.RefCount == 0)
 					_usedPalettes--;
 				
-				var replace = Array.FindIndex(_palette, entry => (entry.Value == value));
+				var replace = Array.FindIndex(_palette, entry => (value == entry.Value));
 				if (replace != -1) {
 					SetPaletteIndex(index, replace);
 					_palette[replace].RefCount += 1;
@@ -95,6 +90,15 @@ namespace Immersion.Voxel
 		}
 		
 		private void GrowPalette() {
+			if (_palette == null) {
+				_data    = new BitArray(SIZE);
+				_palette = new PaletteEntry[2];
+				_usedPalettes  = 1;
+				_indicesLength = 1;
+				_palette[0] = new PaletteEntry { Value = Default, RefCount = SIZE };
+				return;
+			}
+			
 			_indicesLength <<= 1;
 			
 			var oldIndicesLength = _indicesLength >> 1;
