@@ -12,6 +12,9 @@ namespace Immersion
 		public ChunkPaletteStorage<IBlock> ChunkStorage { get; } =
 			new ChunkPaletteStorage<IBlock>(Block.AIR);
 		
+		public bool IsGenerated { get; private set; }
+		public bool HasMesh { get; private set; }
+		
 		public Chunk(World world, ChunkPos pos)
 		{
 			World     = world;
@@ -35,6 +38,8 @@ namespace Immersion
 				if (noise.GetNoise3d(gx, gy, gz) > bias)
 					ChunkStorage[lx, ly, lz] = Block.STONE;
 			}
+			
+			IsGenerated = true;
 		}
 		
 		public void GenerateMesh(ChunkMeshGenerator generator)
@@ -54,6 +59,8 @@ namespace Immersion
 			
 			AddChild(meshInstance);
 			AddChild(staticBody);
+			
+			HasMesh = true;
 		}
 	}
 }

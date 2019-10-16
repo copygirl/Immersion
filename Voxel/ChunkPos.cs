@@ -20,6 +20,10 @@ namespace Immersion.Voxel
 			=> (x, y, z) = (X, Y, Z);
 		
 		
+		public static ChunkPos FromVector3(Vector3 pos)
+			=> new ChunkPos(Mathf.FloorToInt(pos.x) >> 4,
+			                Mathf.FloorToInt(pos.y) >> 4,
+			                Mathf.FloorToInt(pos.z) >> 4);
 		public Vector3 GetOrigin()
 			=> new Vector3(X << 4, Y << 4, Z << 4);
 		public Vector3 GetCenter()

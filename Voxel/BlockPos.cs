@@ -30,6 +30,10 @@ namespace Immersion.Voxel
 		public BlockPos ToChunkRelative(ChunkPos pos)
 			=> new BlockPos(X - (pos.X << 4), Y - (pos.Y << 4), Z - (pos.Z << 4));
 		
+		public static BlockPos FromVector3(Vector3 pos)
+			=> new BlockPos(Mathf.FloorToInt(pos.x),
+			                Mathf.FloorToInt(pos.y),
+			                Mathf.FloorToInt(pos.z));
 		public Vector3 GetOrigin()
 			=> new Vector3(X, Y, Z);
 		public Vector3 GetCenter()

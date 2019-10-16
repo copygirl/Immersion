@@ -25,3 +25,4 @@ shape = SubResource( 2 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0 )
 
 [node name="Camera" type="Camera" parent="Rotation"]
+far = 512.0

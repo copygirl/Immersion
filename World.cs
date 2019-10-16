@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Immersion.Voxel;
 
@@ -12,6 +13,7 @@ namespace Immersion
 		private readonly Dictionary<ChunkPos, Chunk> _chunks =
 			new Dictionary<ChunkPos, Chunk>();
 		
+		private Spatial? _tracked;
 		private ChunkMeshGenerator? _generator;
 		private OpenSimplexNoise? _noise;
 		
@@ -22,6 +24,8 @@ namespace Immersion
 		
 		public override void _Ready()
 		{
+			_tracked = GetNode<Spatial>("../Player");
+			
 			var material = new SpatialMaterial {
 				AlbedoTexture = Texture,
 				VertexColorUseAsAlbedo = true,
@@ -42,22 +46,59 @@ namespace Immersion
 				Persistence = 0.5F,
 			};
 			
-			for (var x = -6; x < 6; x++)
+			for (var x = -3; x < 3; x++)
 			for (var y =  0; y < 4; y++)
-			for (var z = -6; z < 6; z++)
-				GenerateChunks(x, y, z);
+			for (var z = -3; z < 3; z++)
+				GenerateChunk(x, y, z);
 			
-			for (var x = -6; x < 6; x++)
-			for (var z = -6; z < 6; z++)
+			for (var x = -3; x < 3; x++)
+			for (var z = -3; z < 3; z++)
 				CoverChunksWithGrass(x, z);
 			
-			for (var x = -5; x < 5; x++)
+			for (var x = -2; x < 2; x++)
 			for (var y =  0; y < 4; y++)
-			for (var z = -5; z < 5; z++)
-				GenerateChunkMeshes(x, y, z);
+			for (var z = -2; z < 2; z++)
+				GenerateChunkMesh(x, y, z);
 		}
 		
-		public void GenerateChunks(int cx, int cy, int cz)
+		public override void _Process(float delta)
+		{
+			var pos = ChunkPos.FromVector3(_tracked!.GlobalTransform.origin);
+			GenerateNearbyChunks(pos);
+			RemoveFarAwayChunks(pos);
+		}
+		
+		private void GenerateNearbyChunks(ChunkPos center, int distance = 12)
+		{
+			for (var x = 0; x < distance; x = (x >= 0) ? -(x + 1) : -x)
+			for (var z = 0; z < distance; z = (z >= 0) ? -(z + 1) : -z) {
+				if (!_chunks.TryGetValue((center.X + x, 0, center.Z + z), out var chunk)) {
+					for (var y = 0; y < 4; y++)
+						GenerateChunk(center.X + x, y, center.Z + z);
+					CoverChunksWithGrass(center.X + x, center.Z + z);
+					return;
+				} else if (!chunk.HasMesh) {
+					for (var y = 0; y < 4; y++)
+						GenerateChunkMesh(center.X + x, y, center.Z + z);
+					return;
+				}
+			}
+		}
+		
+		private void RemoveFarAwayChunks(ChunkPos center, float distance = 16)
+		{
+			var tooFarChunks = _chunks.Values
+				.Where(chunk => (Math.Abs(chunk.ChunkPos.X - center.X) > distance)
+				             || (Math.Abs(chunk.ChunkPos.Z - center.Z) > distance))
+				.ToList();
+			foreach (var chunk in tooFarChunks) {
+				_chunks.Remove(chunk.ChunkPos);
+				RemoveChild(chunk);
+			}
+		}
+		
+		
+		public void GenerateChunk(int cx, int cy, int cz)
 		{
 			var chunkPos = new ChunkPos(cx, cy, cz);
 			var chunk    = new Chunk(this, chunkPos);
@@ -94,7 +135,7 @@ namespace Immersion
 			}
 		}
 		
-		public void GenerateChunkMeshes(int cx, int cy, int cz)
+		public void GenerateChunkMesh(int cx, int cy, int cz)
 		{
 			var chunkPos = new ChunkPos(cx, cy, cz);
 			var chunk    = _chunks[chunkPos];
