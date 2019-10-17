@@ -1,6 +1,6 @@
 using System;
 
-namespace Immersion.Voxel.Chunk
+namespace Immersion.Voxel.Chunks
 {
 	public interface IChunk
 	{
@@ -9,21 +9,30 @@ namespace Immersion.Voxel.Chunk
 		ChunkNeighbors Neighbors { get; }
 		IVoxelStorage<IBlock> Storage { get; }
 		
-		bool IsGenerated { get; }
-		bool HasMesh { get; }
+		bool IsGenerated { get; set; }
+		bool HasMesh { get; set; }
 	}
 	
 	public class ChunkNeighbors
 	{
-		private IChunk[] _chunks = new IChunk[3 * 3 * 3];
+		private static readonly int CENTER_INDEX = GetIndex(0, 0, 0);
 		
-		public IChunk this[int x, int y, int z] {
+		private readonly IChunk?[] _chunks
+			= new IChunk?[3 * 3 * 3];
+		
+		public IChunk? this[int x, int y, int z] {
 			get => _chunks[GetIndex(x, y, z)];
 			set => _chunks[GetIndex(x, y, z)] = value;
 		}
-		public IChunk this[Neighbor neighbor] {
+		public IChunk? this[Neighbor neighbor] {
 			get { var (x, y, z) = neighbor; return this[x, y, z]; }
 			set { var (x, y, z) = neighbor; this[x, y, z] = value; }
+		}
+		
+		public void Clear()
+		{
+			for (var i = 0; i < _chunks.Length; i++)
+			if (i != CENTER_INDEX) _chunks[i] = null;
 		}
 		
 		private static int GetIndex(int x, int y, int z)

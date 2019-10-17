@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace Immersion.Voxel.Chunk
+namespace Immersion.Voxel.Chunks
 {
 	public class ChunkMeshGenerator
 	{
@@ -47,7 +47,8 @@ namespace Immersion.Voxel.Chunk
 		// 	Colors.DarkBlue,  // North (-Z)
 		// };
 		
-		private static readonly int[] TRIANGLE_INDICES = { 0, 3, 1,  1, 3, 2 };
+		private static readonly int[] TRIANGLE_INDICES
+			= { 0, 3, 1,  1, 3, 2 };
 		
 		public World World { get; }
 		public Material Material { get; set; }
@@ -76,7 +77,7 @@ namespace Immersion.Voxel.Chunk
 				
 				var textureCell = TextureAtlas[block.Texture];
 				var blockVertex = new Vector3(x, y, z);
-				foreach (var facing in BlockFacingHelper.ALL) {
+				foreach (var facing in BlockFacings.ALL) {
 					if (block.IsSideCulled(facing)) {
 						var neighbor = GetNeighborBlock(chunks, x, y, z, facing);
 						if (neighbor.IsSideCulled(facing.GetOpposite())) continue;

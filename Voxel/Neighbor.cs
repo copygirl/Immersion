@@ -48,7 +48,7 @@ namespace Immersion.Voxel
 		DownNorthWest = Down | North | West, // -X -Y -Z
 	}
 	
-	public static class NeighborExtensions
+	public static class Neighbors
 	{
 		public static readonly ImmutableSet<Neighbor> HORIZONTALS =
 			new ImmutableSet<Neighbor>(
@@ -81,8 +81,10 @@ namespace Immersion.Voxel
 				Neighbor.UpNorthEast, Neighbor.UpNorthWest,
 				Neighbor.DownSouthEast, Neighbor.DownSouthWest,
 				Neighbor.DownNorthEast, Neighbor.DownNorthWest);
-		
-		
+	}
+	
+	public static class NeighborExtensions
+	{
 		private const int X_SET_BIT = 0b000010, X_VALUE_BIT = 0b000001;
 		private const int Y_SET_BIT = 0b001000, Y_VALUE_BIT = 0b000100;
 		private const int Z_SET_BIT = 0b100000, Z_VALUE_BIT = 0b010000;
@@ -168,7 +170,7 @@ namespace Immersion.Voxel
 			return neighbor;
 		}
 		
-		public static Neighbor Opposite(this Neighbor self)
+		public static Neighbor GetOpposite(this Neighbor self)
 			{ var (x, y, z) = self; return (-x, -y, -z).ToNeighbor(); }
 		
 		
@@ -183,15 +185,15 @@ namespace Immersion.Voxel
 			=> (self == Neighbor.None);
 		
 		public static bool IsHorizontal(this Neighbor self)
-			=> HORIZONTALS.Contains(self);
+			=> Neighbors.HORIZONTALS.Contains(self);
 		public static bool IsVertical(this Neighbor self)
-			=> VERTICALS.Contains(self);
+			=> Neighbors.VERTICALS.Contains(self);
 		public static bool IsCardinal(this Neighbor self)
-			=> CARDINALS.Contains(self);
+			=> Neighbors.CARDINALS.Contains(self);
 		public static bool IsFacing(this Neighbor self)
-			=> FACINGS.Contains(self);
+			=> Neighbors.FACINGS.Contains(self);
 		public static bool IsValid(this Neighbor self)
-			=> ALL.Contains(self);
+			=> Neighbors.ALL.Contains(self);
 		
 		
 		public static string ToShortString(this Neighbor self)

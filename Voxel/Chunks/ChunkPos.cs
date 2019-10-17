@@ -2,11 +2,12 @@ using System;
 using Godot;
 using Immersion.Utility;
 
-namespace Immersion.Voxel.Chunk
+namespace Immersion.Voxel.Chunks
 {
 	public readonly struct ChunkPos : IEquatable<ChunkPos>
 	{
-		public static readonly ChunkPos ORIGIN = new ChunkPos(0, 0, 0);
+		public static readonly ChunkPos ORIGIN
+			= new ChunkPos(0, 0, 0);
 		
 		
 		public int X { get; }
@@ -30,6 +31,8 @@ namespace Immersion.Voxel.Chunk
 			=> new ChunkPos(X + x, Y + y, Z + z);
 		// public ChunkPos Add(in ChunkPos other)
 		// 	=> new ChunkPos(X + other.X, Y + other.Y, Z + other.Z);
+		public ChunkPos Add(BlockFacing facing)
+			{ var (x, y, z) = facing; return Add(x, y, z); }
 		public ChunkPos Add(Neighbor neighbor)
 			{ var (x, y, z) = neighbor; return Add(x, y, z); }
 		
@@ -37,6 +40,8 @@ namespace Immersion.Voxel.Chunk
 			=> new ChunkPos(X - x, Y - y, Z - z);
 		// public ChunkPos Subtract(in ChunkPos other)
 		// 	=> new ChunkPos(X - other.X, Y - other.Y, Z - other.Z);
+		public ChunkPos Subtract(BlockFacing facing)
+			{ var (x, y, z) = facing; return Subtract(x, y, z); }
 		public ChunkPos Subtract(Neighbor neighbor)
 			{ var (x, y, z) = neighbor; return Subtract(x, y, z); }
 		
@@ -61,6 +66,10 @@ namespace Immersion.Voxel.Chunk
 		// 	=> left.Add(right);
 		// public static ChunkPos operator -(ChunkPos left, ChunkPos right)
 		// 	=> left.Subtract(right);
+		public static ChunkPos operator +(ChunkPos left, BlockFacing right)
+			=> left.Add(right);
+		public static ChunkPos operator -(ChunkPos left, BlockFacing right)
+			=> left.Subtract(right);
 		public static ChunkPos operator +(ChunkPos left, Neighbor right)
 			=> left.Add(right);
 		public static ChunkPos operator -(ChunkPos left, Neighbor right)

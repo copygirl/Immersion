@@ -7,7 +7,8 @@ namespace Immersion.Voxel
 {
 	public class TextureAtlas<T> : IEnumerable<T>
 	{
-		private readonly Dictionary<T, TextureCell> _mappings = new Dictionary<T, TextureCell>();
+		private readonly Dictionary<T, TextureCell> _mappings
+			= new Dictionary<T, TextureCell>();
 		
 		public int Width { get; }
 		public int Height { get; }

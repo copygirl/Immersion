@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using Immersion.Utility;
 
 namespace Immersion.Voxel
 {
@@ -13,21 +14,22 @@ namespace Immersion.Voxel
 		North, // -Z
 	}
 	
-	public static class BlockFacingHelper
+	public static class BlockFacings
 	{
-		public static readonly BlockFacing[] ALL = {
-			BlockFacing.East , BlockFacing.West ,
-			BlockFacing.Up   , BlockFacing.Down ,
-			BlockFacing.South, BlockFacing.North,
-		};
-		public static readonly BlockFacing[] HORIZONTAL = {
-			BlockFacing.East , BlockFacing.West ,
-			BlockFacing.South, BlockFacing.North,
-		};
-		public static readonly BlockFacing[] VERTICAL = {
-			BlockFacing.Up, BlockFacing.Down,
-		};
+		public static readonly ImmutableSet<BlockFacing> HORIZONTALS =
+			new ImmutableSet<BlockFacing>(
+				BlockFacing.East , BlockFacing.West ,
+				BlockFacing.South, BlockFacing.North);
 		
+		public static readonly ImmutableSet<BlockFacing> VERTICALS =
+			new ImmutableSet<BlockFacing>(BlockFacing.Up, BlockFacing.Down);
+		
+		public static readonly ImmutableSet<BlockFacing> ALL =
+			new ImmutableSet<BlockFacing>(HORIZONTALS, VERTICALS);
+	}
+	
+	public static class BlockFacingExtensions
+	{
 		public static void Deconstruct(this BlockFacing self, out int x, out int y, out int z)
 			=> (x, y, z) = self switch {
 				BlockFacing.East  => (+1,  0,  0),

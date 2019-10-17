@@ -7,7 +7,8 @@ namespace Immersion.Voxel
 {
 	public readonly struct BlockPos : IEquatable<BlockPos>
 	{
-		public static readonly BlockPos ORIGIN = new BlockPos(0, 0, 0);
+		public static readonly BlockPos ORIGIN
+			= new BlockPos(0, 0, 0);
 		
 		
 		public int X { get; }

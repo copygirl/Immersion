@@ -53,10 +53,13 @@
     <Compile Include="Properties/AssemblyInfo.cs" />
     <Compile Include="Utility/HashHelper.cs" />
     <Compile Include="Utility/ImmutableSet.cs" />
-    <Compile Include="Voxel/Chunk/ChunkMeshGenerator.cs" />
-    <Compile Include="Voxel/Chunk/ChunkPaletteStorage.cs" />
-    <Compile Include="Voxel/Chunk/ChunkPos.cs" />
-    <Compile Include="Voxel/Chunk/IChunk.cs" />
+    <Compile Include="Voxel/Chunks/ChunkManager.cs" />
+    <Compile Include="Voxel/Chunks/ChunkMeshGenerator.cs" />
+    <Compile Include="Voxel/Chunks/ChunkPaletteStorage.cs" />
+    <Compile Include="Voxel/Chunks/ChunkPos.cs" />
+    <Compile Include="Voxel/Chunks/IChunk.cs" />
+    <Compile Include="Voxel/WorldGen/BasicWorldGenerator.cs" />
+    <Compile Include="Voxel/WorldGen/IWorldGenerator.cs" />
     <Compile Include="Voxel/Block.cs" />
     <Compile Include="Voxel/BlockFacing.cs" />
     <Compile Include="Voxel/BlockPos.cs" />
