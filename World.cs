@@ -63,25 +63,40 @@ namespace Immersion
 		
 		public override void _Process(float delta)
 		{
+			if (Engine.EditorHint) return;
 			var pos = ChunkPos.FromVector3(_tracked!.GlobalTransform.origin);
 			GenerateNearbyChunks(pos);
+			GenerateNearbyChunkMeshes(pos);
 			RemoveFarAwayChunks(pos);
 		}
 		
 		private void GenerateNearbyChunks(ChunkPos center, int distance = 12)
 		{
 			for (var x = 0; x < distance; x = (x >= 0) ? -(x + 1) : -x)
-			for (var z = 0; z < distance; z = (z >= 0) ? -(z + 1) : -z) {
-				if (!_chunks.TryGetValue((center.X + x, 0, center.Z + z), out var chunk)) {
-					for (var y = 0; y < 4; y++)
-						GenerateChunk(center.X + x, y, center.Z + z);
-					CoverChunksWithGrass(center.X + x, center.Z + z);
-					return;
-				} else if (!chunk.HasMesh) {
-					for (var y = 0; y < 4; y++)
-						GenerateChunkMesh(center.X + x, y, center.Z + z);
-					return;
-				}
+			for (var z = 0; z < distance; z = (z >= 0) ? -(z + 1) : -z)
+			if (!_chunks.TryGetValue((center.X + x, 0, center.Z + z), out var chunk)) {
+				for (var y = 0; y < 4; y++)
+					GenerateChunk(center.X + x, y, center.Z + z);
+				CoverChunksWithGrass(center.X + x, center.Z + z);
+				return;
+			}
+		}
+		
+		private void GenerateNearbyChunkMeshes(ChunkPos center, int distance = 11)
+		{
+			bool HasNeighbors(Chunk chunk)
+				=> (chunk.ChunkNeighbors[2, 1, 1]?.IsGenerated == true)
+				&& (chunk.ChunkNeighbors[0, 1, 1]?.IsGenerated == true)
+				&& (chunk.ChunkNeighbors[1, 1, 2]?.IsGenerated == true)
+				&& (chunk.ChunkNeighbors[1, 1, 0]?.IsGenerated == true);
+			
+			for (var x = 0; x < distance; x = (x >= 0) ? -(x + 1) : -x)
+			for (var z = 0; z < distance; z = (z >= 0) ? -(z + 1) : -z)
+			if (_chunks.TryGetValue((center.X + x, 0, center.Z + z), out var chunk)
+			 && !chunk.HasMesh && HasNeighbors(chunk)) {
+				for (var y = 0; y < 4; y++)
+					GenerateChunkMesh(center.X + x, y, center.Z + z);
+				return;
 			}
 		}
 		

@@ -76,7 +76,7 @@ namespace Immersion.Voxel
 				
 				var textureCell = TextureAtlas[block.Texture];
 				var blockVertex = new Vector3(x, y, z);
-				foreach (var facing in BlockFacingHelper.ALL_FACINGS) {
+				foreach (var facing in BlockFacingHelper.ALL) {
 					if (block.IsSideCulled(facing)) {
 						var neighbor = GetNeighborBlock(chunks, x, y, z, facing);
 						if (neighbor.IsSideCulled(facing.GetOpposite())) continue;

@@ -15,10 +15,17 @@ namespace Immersion.Voxel
 	
 	public static class BlockFacingHelper
 	{
-		public static readonly BlockFacing[] ALL_FACINGS = {
+		public static readonly BlockFacing[] ALL = {
 			BlockFacing.East , BlockFacing.West ,
 			BlockFacing.Up   , BlockFacing.Down ,
 			BlockFacing.South, BlockFacing.North,
+		};
+		public static readonly BlockFacing[] HORIZONTAL = {
+			BlockFacing.East , BlockFacing.West ,
+			BlockFacing.South, BlockFacing.North,
+		};
+		public static readonly BlockFacing[] VERTICAL = {
+			BlockFacing.Up, BlockFacing.Down,
 		};
 		
 		public static void Deconstruct(this BlockFacing self, out int x, out int y, out int z)
