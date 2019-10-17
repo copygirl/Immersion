@@ -5,14 +5,6 @@ namespace Immersion
 {
 	public class Player : KinematicBody
 	{
-		private Camera? _camera;
-		private Spatial? _rotation;
-		
-		private Vector3 _velocity = Vector3.Zero;
-		private DateTime? _jumpPressed = null;
-		private DateTime? _lastOnFloor = null;
-		
-		
 		public float MouseSensitivity { get; set; } = 0.2F;
 		
 		/// <summary>  Time after pressing the jump button a jump may occur late. </summary>
@@ -31,6 +23,16 @@ namespace Immersion
 		public float FloorMaxAngle { get; set; } = Mathf.Deg2Rad(45.0F);
 		
 		
+		private Camera? _camera;
+		private Spatial? _rotation;
+		
+		private Vector3 _velocity = Vector3.Zero;
+		private DateTime? _jumpPressed = null;
+		private DateTime? _lastOnFloor = null;
+		
+		public bool IsSprinting { get; private set; }
+		
+		
 		public override void _Ready()
 		{
 			_rotation = GetNode<Spatial>("Rotation");
@@ -44,6 +46,8 @@ namespace Immersion
 		
 		public override void _PhysicsProcess(float delta)
 		{
+			IsSprinting = Input.IsActionPressed("move_sprint");
+			
 			_velocity.y += delta * Gravity;
 			
 			var movementVector = new Vector2(
@@ -65,6 +69,7 @@ namespace Immersion
 			var target   = dir * MaxMoveSpeed;
 			var friction = IsOnFloor() ? FrictionFloor : FrictionAir;
 			var accel    = (dir.Dot(hvel) > 0) ? MoveAccel : friction;
+			if (IsSprinting) { target *= 5; accel *= 5; }
 			hvel = hvel.LinearInterpolate(target, accel * delta);
 			
 			_velocity.x = hvel.x;
@@ -80,7 +85,7 @@ namespace Immersion
 			
 			if (((DateTime.Now - _jumpPressed) <= JumpEarlyTime)
 			 && ((DateTime.Now - _lastOnFloor) <= JumpCoyoteTime)) {
-				_velocity.y  = JumpVelocity;
+				_velocity.y  = IsSprinting ? JumpVelocity * 5 : JumpVelocity;
 				_jumpPressed = null;
 				_lastOnFloor = null;
 			}
