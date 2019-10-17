@@ -21,15 +21,6 @@ namespace Immersion.Voxel
 			=> (x, y, z) = (X, Y, Z);
 		
 		
-		public static BlockPos FromChunkPos(ChunkPos pos)
-			=> new BlockPos(pos.X << 4, pos.Y << 4, pos.Z << 4);
-		public ChunkPos ToChunkPos()
-			=> new ChunkPos(X >> 4, Y >> 4, Z >> 4);
-		public BlockPos ToChunkRelative()
-			=> new BlockPos(X & 0b1111, Y & 0b1111, Z & 0b1111);
-		public BlockPos ToChunkRelative(ChunkPos pos)
-			=> new BlockPos(X - (pos.X << 4), Y - (pos.Y << 4), Z - (pos.Z << 4));
-		
 		public static BlockPos FromVector3(Vector3 pos)
 			=> new BlockPos(Mathf.FloorToInt(pos.x),
 			                Mathf.FloorToInt(pos.y),

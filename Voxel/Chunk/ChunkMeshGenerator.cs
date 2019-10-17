@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-namespace Immersion.Voxel
+namespace Immersion.Voxel.Chunk
 {
 	public class ChunkMeshGenerator
 	{

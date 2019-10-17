@@ -52,12 +52,12 @@
   <ItemGroup>
     <Compile Include="Properties/AssemblyInfo.cs" />
     <Compile Include="Utility/HashHelper.cs" />
+    <Compile Include="Voxel/Chunk/ChunkMeshGenerator.cs" />
+    <Compile Include="Voxel/Chunk/ChunkPaletteStorage.cs" />
+    <Compile Include="Voxel/Chunk/ChunkPos.cs" />
     <Compile Include="Voxel/Block.cs" />
     <Compile Include="Voxel/BlockFacing.cs" />
     <Compile Include="Voxel/BlockPos.cs" />
-    <Compile Include="Voxel/ChunkMeshGenerator.cs" />
-    <Compile Include="Voxel/ChunkPaletteStorage.cs" />
-    <Compile Include="Voxel/ChunkPos.cs" />
     <Compile Include="Voxel/IBlock.cs" />
     <Compile Include="Voxel/IVoxelStorage.cs" />
     <Compile Include="Voxel/TextureAtlas.cs" />

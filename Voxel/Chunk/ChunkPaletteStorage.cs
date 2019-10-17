@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Immersion.Voxel
+namespace Immersion.Voxel.Chunk
 {
 	public class ChunkPaletteStorage<T>
 		: IVoxelStorage<T>

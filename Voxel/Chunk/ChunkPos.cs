@@ -2,7 +2,7 @@ using System;
 using Godot;
 using Immersion.Utility;
 
-namespace Immersion.Voxel
+namespace Immersion.Voxel.Chunk
 {
 	public readonly struct ChunkPos : IEquatable<ChunkPos>
 	{
@@ -66,5 +66,17 @@ namespace Immersion.Voxel
 			=> left.Equals(right);
 		public static bool operator !=(ChunkPos left, ChunkPos right)
 			=> !left.Equals(right);
+	}
+	
+	public static class ChunkPosExtensions
+	{
+		public static ChunkPos ToChunkPos(this BlockPos self)
+			=> new ChunkPos(self.X >> 4, self.Y >> 4, self.Z >> 4);
+		public static BlockPos ToChunkRelative(this BlockPos self)
+			=> new BlockPos(self.X & 0b1111, self.Y & 0b1111, self.Z & 0b1111);
+		public static BlockPos ToChunkRelative(this BlockPos self, ChunkPos chunk)
+			=> new BlockPos(self.X - (chunk.X << 4),
+			                self.Y - (chunk.Y << 4),
+			                self.Z - (chunk.Z << 4));
 	}
 }

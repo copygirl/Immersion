@@ -1,5 +1,6 @@
 using Godot;
 using Immersion.Voxel;
+using Immersion.Voxel.Chunk;
 
 namespace Immersion
 {
