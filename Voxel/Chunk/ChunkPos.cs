@@ -20,10 +20,6 @@ namespace Immersion.Voxel.Chunk
 			=> (x, y, z) = (X, Y, Z);
 		
 		
-		public static ChunkPos FromVector3(Vector3 pos)
-			=> new ChunkPos(Mathf.FloorToInt(pos.x) >> 4,
-			                Mathf.FloorToInt(pos.y) >> 4,
-			                Mathf.FloorToInt(pos.z) >> 4);
 		public Vector3 GetOrigin()
 			=> new Vector3(X << 4, Y << 4, Z << 4);
 		public Vector3 GetCenter()
@@ -32,13 +28,17 @@ namespace Immersion.Voxel.Chunk
 		
 		public ChunkPos Add(int x, int y, int z)
 			=> new ChunkPos(X + x, Y + y, Z + z);
-		public ChunkPos Add(in ChunkPos other)
-			=> new ChunkPos(X + other.X, Y + other.Y, Z + other.Z);
+		// public ChunkPos Add(in ChunkPos other)
+		// 	=> new ChunkPos(X + other.X, Y + other.Y, Z + other.Z);
+		public ChunkPos Add(Neighbor neighbor)
+			{ var (x, y, z) = neighbor; return Add(x, y, z); }
 		
 		public ChunkPos Subtract(int x, int y, int z)
 			=> new ChunkPos(X - x, Y - y, Z - z);
-		public ChunkPos Subtract(in ChunkPos other)
-			=> new ChunkPos(X - other.X, Y - other.Y, Z - other.Z);
+		// public ChunkPos Subtract(in ChunkPos other)
+		// 	=> new ChunkPos(X - other.X, Y - other.Y, Z - other.Z);
+		public ChunkPos Subtract(Neighbor neighbor)
+			{ var (x, y, z) = neighbor; return Subtract(x, y, z); }
 		
 		
 		public bool Equals(ChunkPos other)
@@ -57,9 +57,13 @@ namespace Immersion.Voxel.Chunk
 		public static implicit operator (int, int, int)(ChunkPos pos)
 			=> (pos.X, pos.Y, pos.Z);
 		
-		public static ChunkPos operator +(ChunkPos left, ChunkPos right)
+		// public static ChunkPos operator +(ChunkPos left, ChunkPos right)
+		// 	=> left.Add(right);
+		// public static ChunkPos operator -(ChunkPos left, ChunkPos right)
+		// 	=> left.Subtract(right);
+		public static ChunkPos operator +(ChunkPos left, Neighbor right)
 			=> left.Add(right);
-		public static ChunkPos operator -(ChunkPos left, ChunkPos right)
+		public static ChunkPos operator -(ChunkPos left, Neighbor right)
 			=> left.Subtract(right);
 		
 		public static bool operator ==(ChunkPos left, ChunkPos right)
@@ -70,6 +74,11 @@ namespace Immersion.Voxel.Chunk
 	
 	public static class ChunkPosExtensions
 	{
+		public static ChunkPos ToChunkPos(this Vector3 pos)
+			=> new ChunkPos(Mathf.FloorToInt(pos.x) >> 4,
+			                Mathf.FloorToInt(pos.y) >> 4,
+			                Mathf.FloorToInt(pos.z) >> 4);
+		
 		public static ChunkPos ToChunkPos(this BlockPos self)
 			=> new ChunkPos(self.X >> 4, self.Y >> 4, self.Z >> 4);
 		public static BlockPos ToChunkRelative(this BlockPos self)

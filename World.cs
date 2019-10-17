@@ -66,7 +66,7 @@ namespace Immersion
 		public override void _Process(float delta)
 		{
 			if (Engine.EditorHint) return;
-			var pos = ChunkPos.FromVector3(_tracked!.GlobalTransform.origin);
+			var pos = _tracked!.GlobalTransform.origin.ToChunkPos();
 			GenerateNearbyChunks(pos);
 			GenerateNearbyChunkMeshes(pos);
 			RemoveFarAwayChunks(pos);
@@ -87,10 +87,10 @@ namespace Immersion
 		private void GenerateNearbyChunkMeshes(ChunkPos center, int distance = 11)
 		{
 			bool HasNeighbors(Chunk chunk)
-				=> (chunk.ChunkNeighbors[2, 1, 1]?.IsGenerated == true)
-				&& (chunk.ChunkNeighbors[0, 1, 1]?.IsGenerated == true)
-				&& (chunk.ChunkNeighbors[1, 1, 2]?.IsGenerated == true)
-				&& (chunk.ChunkNeighbors[1, 1, 0]?.IsGenerated == true);
+				=> (chunk.Neighbors[ 1, 0, 0]?.IsGenerated == true)
+				&& (chunk.Neighbors[-1, 0, 0]?.IsGenerated == true)
+				&& (chunk.Neighbors[ 0, 0, 1]?.IsGenerated == true)
+				&& (chunk.Neighbors[ 0, 0,-1]?.IsGenerated == true);
 			
 			for (var x = 0; x < distance; x = (x >= 0) ? -(x + 1) : -x)
 			for (var z = 0; z < distance; z = (z >= 0) ? -(z + 1) : -z)
@@ -105,11 +105,11 @@ namespace Immersion
 		private void RemoveFarAwayChunks(ChunkPos center, float distance = 16)
 		{
 			var tooFarChunks = _chunks.Values
-				.Where(chunk => (Math.Abs(chunk.ChunkPos.X - center.X) > distance)
-				             || (Math.Abs(chunk.ChunkPos.Z - center.Z) > distance))
+				.Where(chunk => (Math.Abs(chunk.Position.X - center.X) > distance)
+				             || (Math.Abs(chunk.Position.Z - center.Z) > distance))
 				.ToList();
 			foreach (var chunk in tooFarChunks) {
-				_chunks.Remove(chunk.ChunkPos);
+				_chunks.Remove(chunk.Position);
 				RemoveChild(chunk);
 			}
 		}
@@ -126,8 +126,8 @@ namespace Immersion
 			for (var z = -1; z <= 1; z++)
 			if (((x != 0) || (y != 0) || (z != 0))
 			 && _chunks.TryGetValue(chunkPos.Add(x, y, z), out var neighbor)) {
-				chunk.ChunkNeighbors[1+x, 1+y, 1+z] = neighbor;
-				neighbor.ChunkNeighbors[1-x, 1-y, 1-z] = chunk;
+				chunk.Neighbors[x, y, z] = neighbor;
+				neighbor.Neighbors[-x, -y, -z] = chunk;
 			}
 			
 			chunk.GenerateBlocks(_noise!);
@@ -138,13 +138,13 @@ namespace Immersion
 			for (var lx = 0; lx < 16; lx++)
 			for (var lz = 0; lz < 16; lz++) {
 				var depth = 4;
-				Chunk? chunk = null;
+				IChunk? chunk = null;
 				for (var gy = 63; gy >= 0; gy--) {
-					if (chunk?.ChunkPos.Y != (gy >> 4))
+					if (chunk?.Position.Y != (gy >> 4))
 						chunk = _chunks[new ChunkPos(cx, (gy >> 4), cz)];
-					var block = chunk.ChunkStorage[lx, gy & 0b1111, lz];
+					var block = chunk.Storage[lx, gy & 0b1111, lz];
 					if (block != Block.AIR) {
-						chunk.ChunkStorage[lx, gy & 0b1111, lz] =
+						chunk.Storage[lx, gy & 0b1111, lz] =
 							(depth-- == 4) ? Block.GRASS : Block.DIRT;
 						if (depth <= 0) break;
 					} else if (depth < 4) break;

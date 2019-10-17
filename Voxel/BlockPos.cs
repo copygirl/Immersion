@@ -21,10 +21,6 @@ namespace Immersion.Voxel
 			=> (x, y, z) = (X, Y, Z);
 		
 		
-		public static BlockPos FromVector3(Vector3 pos)
-			=> new BlockPos(Mathf.FloorToInt(pos.x),
-			                Mathf.FloorToInt(pos.y),
-			                Mathf.FloorToInt(pos.z));
 		public Vector3 GetOrigin()
 			=> new Vector3(X, Y, Z);
 		public Vector3 GetCenter()
@@ -37,15 +33,15 @@ namespace Immersion.Voxel
 			=> new BlockPos(X + other.X, Y + other.Y, Z + other.Z);
 		
 		public BlockPos Add(BlockFacing facing)
-		{
-			var (x, y, z) = facing;
-			return Add(x, y, z);
-		}
+			{ var (x, y, z) = facing; return Add(x, y, z); }
 		public BlockPos Add(BlockFacing facing, int factor)
-		{
-			var (x, y, z) = facing;
-			return Add(x * factor, y * factor, z * factor);
-		}
+			{ var (x, y, z) = facing; return Add(x * factor, y * factor, z * factor); }
+		
+		public BlockPos Add(Neighbor neighbor)
+			{ var (x, y, z) = neighbor; return Add(x, y, z); }
+		public BlockPos Add(Neighbor neighor, int factor)
+			{ var (x, y, z) = neighor; return Add(x * factor, y * factor, z * factor); }
+		
 		
 		public BlockPos Subtract(int x, int y, int z)
 			=> new BlockPos(X - x, Y - y, Z - z);
@@ -53,15 +49,14 @@ namespace Immersion.Voxel
 			=> new BlockPos(X - other.X, Y - other.Y, Z - other.Z);
 		
 		public BlockPos Subtract(BlockFacing facing)
-		{
-			var (x, y, z) = facing;
-			return Subtract(x, y, z);
-		}
+			{ var (x, y, z) = facing; return Subtract(x, y, z); }
 		public BlockPos Subtract(BlockFacing facing, int factor)
-		{
-			var (x, y, z) = facing;
-			return Subtract(x * factor, y * factor, z * factor);
-		}
+			{ var (x, y, z) = facing; return Subtract(x * factor, y * factor, z * factor); }
+		
+		public BlockPos Subtract(Neighbor neighbor)
+			{ var (x, y, z) = neighbor; return Subtract(x, y, z); }
+		public BlockPos Subtract(Neighbor neighor, int factor)
+			{ var (x, y, z) = neighor; return Subtract(x * factor, y * factor, z * factor); }
 		
 		
 		public bool Equals(BlockPos other)
@@ -88,10 +83,22 @@ namespace Immersion.Voxel
 			=> left.Add(right);
 		public static BlockPos operator -(BlockPos left, BlockFacing right)
 			=> left.Subtract(right);
+		public static BlockPos operator +(BlockPos left, Neighbor right)
+			=> left.Add(right);
+		public static BlockPos operator -(BlockPos left, Neighbor right)
+			=> left.Subtract(right);
 		
 		public static bool operator ==(BlockPos left, BlockPos right)
 			=> left.Equals(right);
 		public static bool operator !=(BlockPos left, BlockPos right)
 			=> !left.Equals(right);
+	}
+	
+	public static class BlockPosExtensions
+	{
+		public static BlockPos FromVector3(this Vector3 self)
+			=> new BlockPos(Mathf.FloorToInt(self.x),
+			                Mathf.FloorToInt(self.y),
+			                Mathf.FloorToInt(self.z));
 	}
 }

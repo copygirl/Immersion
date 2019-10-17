@@ -61,17 +61,17 @@ namespace Immersion.Voxel.Chunk
 			TextureAtlas = atlas;
 		}
 		
-		public ArrayMesh Generate(IVoxelView<IBlock>?[,,] chunks)
+		public ArrayMesh Generate(ChunkNeighbors chunks)
 		{
 			var st = new SurfaceTool();
 			st.Begin(Mesh.PrimitiveType.Triangles);
 			st.SetMaterial(Material);
 			
-			var chunk = chunks[1, 1, 1]!;
+			var chunk = chunks[0, 0, 0]!;
 			for (var x = 0; x < 16; x++)
 			for (var y = 0; y < 16; y++)
 			for (var z = 0; z < 16; z++) {
-				var block = chunk[x, y, z];
+				var block = chunk.Storage[x, y, z];
 				if (block.IsAir) continue;
 				
 				var textureCell = TextureAtlas[block.Texture];
@@ -103,10 +103,10 @@ namespace Immersion.Voxel.Chunk
 			return st.Commit();
 		}
 		
-		private IBlock GetNeighborBlock(IVoxelView<IBlock>?[,,] chunks,
-		                                int x, int y, int z, BlockFacing facing)
+		private IBlock GetNeighborBlock(
+			ChunkNeighbors chunks, int x, int y, int z, BlockFacing facing)
 		{
-			var cx = 1; var cy = 1; var cz = 1;
+			var cx = 0; var cy = 0; var cz = 0;
 			switch (facing) {
 				case BlockFacing.East  : x += 1; if (x >= 16) cx += 1; break;
 				case BlockFacing.West  : x -= 1; if (x <   0) cx -= 1; break;
@@ -115,7 +115,7 @@ namespace Immersion.Voxel.Chunk
 				case BlockFacing.South : z += 1; if (z >= 16) cz += 1; break;
 				case BlockFacing.North : z -= 1; if (z <   0) cz -= 1; break;
 			}
-			return chunks[cx, cy, cz]?[x & 0b1111, y & 0b1111, z & 0b1111] ?? Block.AIR;
+			return chunks[cx, cy, cz]?.Storage[x & 0b1111, y & 0b1111, z & 0b1111] ?? Block.AIR;
 		}
 	}
 }
