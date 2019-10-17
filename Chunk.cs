@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Immersion.Voxel;
 using Immersion.Voxel.Chunks;
@@ -14,9 +15,8 @@ namespace Immersion
 			= new ChunkNeighbors();
 		public IVoxelStorage<IBlock> Storage { get; }
 			= new ChunkPaletteStorage<IBlock>(Block.AIR);
-		
-		public bool IsGenerated { get; set; }
-		public bool HasMesh { get; set; }
+		public ICollection<string> AppliedGenerators { get; }
+			= new HashSet<string>();
 		
 		public Chunk(World world, ChunkPos pos)
 		{
@@ -37,8 +37,6 @@ namespace Immersion
 			
 			AddChild(meshInstance);
 			AddChild(staticBody);
-			
-			HasMesh = true;
 		}
 	}
 }

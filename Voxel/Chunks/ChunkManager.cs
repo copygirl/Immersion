@@ -21,8 +21,10 @@ namespace Immersion.Voxel.Chunks
 		
 		public World World { get; }
 		public ChunkMeshGenerator MeshGenerator { get; }
-		public BasicWorldGenerator Generator { get; }
-			= new BasicWorldGenerator();
+		public IWorldGenerator[] Generators { get; } = {
+			new BasicWorldGenerator(),
+			new SurfaceGrassGenerator(),
+		};
 		
 		public IChunk? this[ChunkPos pos]
 			=> _chunks.TryGetValue(pos, out var chunk) ? chunk : null;
@@ -118,11 +120,21 @@ namespace Immersion.Voxel.Chunks
 				foreach (var weightedPos in _seenChunks) {
 					if (weightedPos.Weight < 0) break;
 					var chunk = this[weightedPos];
-					if (((chunk == null) || (chunk.State == ChunkState.New))
-					 && (chunksToGenerate-- > 0)) {
+					if (((chunk == null) || (chunk.State < ChunkState.Generated))
+					 && (chunksToGenerate > 0)) {
 						chunk = GetOrCreate(weightedPos);
-						Generator.Populate(chunk);
-						chunk.State = ChunkState.Generated;
+						chunk.State = ChunkState.Generating;
+						var allGenerated = true;
+						foreach (var generator in Generators) {
+							if (chunk.AppliedGenerators.Contains(generator.Identifier)) continue;
+							if (!generator.Populate(chunk)) { allGenerated = false; break; }
+							else chunk.AppliedGenerators.Add(generator.Identifier);
+							
+						}
+						if (allGenerated) {
+							chunk.State = ChunkState.Generated;
+							chunksToGenerate--;
+						}
 					}
 					if ((chunk != null) && (chunk.State == ChunkState.Generated)
 					 && Neighbors.FACINGS.All(n => (chunk.Neighbors[n] != null))

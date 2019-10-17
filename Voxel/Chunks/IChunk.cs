@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Immersion.Voxel.Chunks
 {
@@ -9,6 +10,7 @@ namespace Immersion.Voxel.Chunks
 		ChunkState State { get; set; }
 		ChunkNeighbors Neighbors { get; }
 		IVoxelStorage<IBlock> Storage { get; }
+		ICollection<string> AppliedGenerators { get; }
 	}
 	
 	public enum ChunkState

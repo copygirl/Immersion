@@ -60,6 +60,7 @@
     <Compile Include="Voxel/Chunks/IChunk.cs" />
     <Compile Include="Voxel/WorldGen/BasicWorldGenerator.cs" />
     <Compile Include="Voxel/WorldGen/IWorldGenerator.cs" />
+    <Compile Include="Voxel/WorldGen/SurfaceGrassGenerator.cs" />
     <Compile Include="Voxel/Block.cs" />
     <Compile Include="Voxel/BlockFacing.cs" />
     <Compile Include="Voxel/BlockPos.cs" />

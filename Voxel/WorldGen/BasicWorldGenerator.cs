@@ -10,7 +10,7 @@ namespace Immersion.Voxel.WorldGen
 		private readonly OpenSimplexNoise _noise = new OpenSimplexNoise {
 			Seed = new Random().Next(),
 			Octaves     = 4,
-			Persistence = 0.5F,
+			Persistence = 0.6F,
 		};
 		
 		public int Seed {
@@ -18,7 +18,11 @@ namespace Immersion.Voxel.WorldGen
 			set => _noise.Seed = value;
 		}
 		
-		public void Populate(IChunk chunk)
+		public string Identifier => nameof(BasicWorldGenerator);
+		
+		public int Priority => -100;
+		
+		public bool Populate(IChunk chunk)
 		{
 			for (var lx = 0; lx < 16; lx++)
 			for (var ly = 0; ly < 16; ly++)
@@ -26,10 +30,11 @@ namespace Immersion.Voxel.WorldGen
 				var gx = chunk.Position.X << 4 | lx;
 				var gy = chunk.Position.Y << 4 | ly;
 				var gz = chunk.Position.Z << 4 | lz;
-				var bias = Mathf.Clamp((gy / 48.0F - 0.5F), -0.5F, 1.0F);
+				var bias = Mathf.Clamp((gy / 64.0F - 0.5F), -0.75F, 1.0F);
 				if (_noise.GetNoise3d(gx, gy, gz) > bias)
 					chunk.Storage[lx, ly, lz] = Block.STONE;
 			}
+			return true;
 		}
 	}
 }

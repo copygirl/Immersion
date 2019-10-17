@@ -4,6 +4,10 @@ namespace Immersion.Voxel.WorldGen
 {
 	public interface IWorldGenerator
 	{
-		void Populate(IChunk chunk);
+		string Identifier { get; }
+		
+		int Priority { get; }
+		
+		bool Populate(IChunk chunk);
 	}
 }
