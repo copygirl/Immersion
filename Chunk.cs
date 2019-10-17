@@ -9,6 +9,7 @@ namespace Immersion
 	{
 		public World World { get; }
 		public ChunkPos Position { get; }
+		public ChunkState State { get; set; }
 		public ChunkNeighbors Neighbors { get; }
 			= new ChunkNeighbors();
 		public IVoxelStorage<IBlock> Storage { get; }

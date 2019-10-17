@@ -118,15 +118,18 @@ namespace Immersion.Voxel.Chunks
 				foreach (var weightedPos in _seenChunks) {
 					if (weightedPos.Weight < 0) break;
 					var chunk = this[weightedPos];
-					if ((chunk?.IsGenerated != true) && (chunksToGenerate-- > 0)) {
+					if (((chunk == null) || (chunk.State == ChunkState.New))
+					 && (chunksToGenerate-- > 0)) {
 						chunk = GetOrCreate(weightedPos);
 						Generator.Populate(chunk);
-						chunk.IsGenerated = true;
+						chunk.State = ChunkState.Generated;
 					}
-					if ((chunk?.HasMesh == false)
+					if ((chunk != null) && (chunk.State == ChunkState.Generated)
 					 && Neighbors.FACINGS.All(n => (chunk.Neighbors[n] != null))
-					 && (meshesToGenerate-- > 0))
+					 && (meshesToGenerate-- > 0)) {
 						((Immersion.Chunk)chunk).GenerateMesh(MeshGenerator);
+						chunk.State = ChunkState.Ready;
+					}
 				}
 			}
 		}

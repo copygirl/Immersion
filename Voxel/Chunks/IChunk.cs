@@ -6,11 +6,24 @@ namespace Immersion.Voxel.Chunks
 	{
 		World World { get; }
 		ChunkPos Position { get; }
+		ChunkState State { get; set; }
 		ChunkNeighbors Neighbors { get; }
 		IVoxelStorage<IBlock> Storage { get; }
-		
-		bool IsGenerated { get; set; }
-		bool HasMesh { get; set; }
+	}
+	
+	public enum ChunkState
+	{
+		/// <summary> New chunk ready to be filled. </summary>
+		New,
+		/// <summary> Currently asynchronously generating chunk data. </summary>
+		Generating,
+		/// <summary> Finished generating, filled with chunk data. </summary>
+		Generated,
+		/// <summary> Currently asynchronously generating mesh and collision data.
+		///           May also be in this state after being updated, having to re-bake. </summary>
+		Baking,
+		/// <summary> Fully ready to be used in the world. </summary>
+		Ready
 	}
 	
 	public class ChunkNeighbors
