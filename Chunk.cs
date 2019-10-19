@@ -10,25 +10,25 @@ namespace Immersion
 	{
 		public World World { get; }
 		public ChunkPos Position { get; }
-		public ChunkState State { get; set; }
+		public ChunkState State { get; internal set; }
 		public ChunkNeighbors Neighbors { get; }
-			= new ChunkNeighbors();
 		public IVoxelStorage<IBlock> Storage { get; }
 			= new ChunkPaletteStorage<IBlock>(Block.AIR);
 		public ICollection<string> AppliedGenerators { get; }
 			= new HashSet<string>();
-		
+
 		public Chunk(World world, ChunkPos pos)
 		{
 			World     = world;
 			Position  = pos;
 			Transform = new Transform(Basis.Identity, pos.GetOrigin());
-			Neighbors[0, 0, 0] = this;
+			Neighbors = new ChunkNeighbors(this);
 		}
 		
 		public void GenerateMesh(ChunkMeshGenerator generator)
 		{
-			var mesh  = generator.Generate(Neighbors);
+			var mesh = generator.Generate(Neighbors);
+			if (mesh == null) return;
 			var shape = mesh.CreateTrimeshShape();
 			
 			var meshInstance = new MeshInstance { Mesh = mesh };

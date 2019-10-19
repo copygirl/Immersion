@@ -29,8 +29,8 @@ namespace Immersion.Voxel.Chunks
 		
 		public ChunkPos Add(int x, int y, int z)
 			=> new ChunkPos(X + x, Y + y, Z + z);
-		// public ChunkPos Add(in ChunkPos other)
-		// 	=> new ChunkPos(X + other.X, Y + other.Y, Z + other.Z);
+		public ChunkPos Add(in ChunkPos other)
+			=> new ChunkPos(X + other.X, Y + other.Y, Z + other.Z);
 		public ChunkPos Add(BlockFacing facing)
 			{ var (x, y, z) = facing; return Add(x, y, z); }
 		public ChunkPos Add(Neighbor neighbor)
@@ -38,8 +38,8 @@ namespace Immersion.Voxel.Chunks
 		
 		public ChunkPos Subtract(int x, int y, int z)
 			=> new ChunkPos(X - x, Y - y, Z - z);
-		// public ChunkPos Subtract(in ChunkPos other)
-		// 	=> new ChunkPos(X - other.X, Y - other.Y, Z - other.Z);
+		public ChunkPos Subtract(in ChunkPos other)
+			=> new ChunkPos(X - other.X, Y - other.Y, Z - other.Z);
 		public ChunkPos Subtract(BlockFacing facing)
 			{ var (x, y, z) = facing; return Subtract(x, y, z); }
 		public ChunkPos Subtract(Neighbor neighbor)
@@ -54,7 +54,7 @@ namespace Immersion.Voxel.Chunks
 		public override int GetHashCode()
 			=> HashHelper.Combine(X, Y, Z);
 		public override string ToString()
-			=> $"ChunkPos [{X}:{Y}:{Z}]";
+			=> $"ChunkPos ({X}, {Y}, {Z})";
 		
 		
 		public static implicit operator ChunkPos((int x, int y, int z) t)
@@ -62,10 +62,10 @@ namespace Immersion.Voxel.Chunks
 		public static implicit operator (int, int, int)(ChunkPos pos)
 			=> (pos.X, pos.Y, pos.Z);
 		
-		// public static ChunkPos operator +(ChunkPos left, ChunkPos right)
-		// 	=> left.Add(right);
-		// public static ChunkPos operator -(ChunkPos left, ChunkPos right)
-		// 	=> left.Subtract(right);
+		public static ChunkPos operator +(ChunkPos left, ChunkPos right)
+			=> left.Add(right);
+		public static ChunkPos operator -(ChunkPos left, ChunkPos right)
+			=> left.Subtract(right);
 		public static ChunkPos operator +(ChunkPos left, BlockFacing right)
 			=> left.Add(right);
 		public static ChunkPos operator -(ChunkPos left, BlockFacing right)

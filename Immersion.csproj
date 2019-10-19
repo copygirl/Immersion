@@ -51,12 +51,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties/AssemblyInfo.cs" />
+    <Compile Include="Utility/CollectionExtensions.cs" />
     <Compile Include="Utility/HashHelper.cs" />
     <Compile Include="Utility/ImmutableSet.cs" />
     <Compile Include="Voxel/Chunks/ChunkManager.cs" />
     <Compile Include="Voxel/Chunks/ChunkMeshGenerator.cs" />
+    <Compile Include="Voxel/Chunks/ChunkNeighbors.cs" />
     <Compile Include="Voxel/Chunks/ChunkPaletteStorage.cs" />
     <Compile Include="Voxel/Chunks/ChunkPos.cs" />
+    <Compile Include="Voxel/Chunks/ChunkTracker.cs" />
     <Compile Include="Voxel/Chunks/IChunk.cs" />
     <Compile Include="Voxel/WorldGen/BasicWorldGenerator.cs" />
     <Compile Include="Voxel/WorldGen/IWorldGenerator.cs" />

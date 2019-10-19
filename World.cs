@@ -35,7 +35,7 @@ namespace Immersion
 			Chunks = new ChunkManager(this, generator);
 			Chunks.OnChunkAdded   += (chunk) => AddChild((Chunk)chunk);
 			Chunks.OnChunkRemoved += (chunk) => RemoveChild((Chunk)chunk);
-			Chunks.StartTracking(GetNode<Spatial>("../Player"), 12);
+			Chunks.Tracker.StartTracking(GetNode<Spatial>("../Player"), 12);
 		}
 		
 		public override void _Process(float delta)

@@ -62,12 +62,13 @@ namespace Immersion.Voxel.Chunks
 			TextureAtlas = atlas;
 		}
 		
-		public ArrayMesh Generate(ChunkNeighbors chunks)
+		public ArrayMesh? Generate(ChunkNeighbors chunks)
 		{
 			var st = new SurfaceTool();
 			st.Begin(Mesh.PrimitiveType.Triangles);
 			st.SetMaterial(Material);
 			
+			var numFaces = 0;
 			var chunk = chunks[0, 0, 0]!;
 			for (var x = 0; x < 16; x++)
 			for (var y = 0; y < 16; y++)
@@ -98,10 +99,11 @@ namespace Immersion.Voxel.Chunks
 						st.AddUv(uv);
 						st.AddVertex(blockVertex + VERTICES_PER_FACING[vertIndex | j]);
 					}
+					numFaces++;
 				}
 			}
 			
-			return st.Commit();
+			return (numFaces > 0) ? st.Commit() : null;
 		}
 		
 		private IBlock GetNeighborBlock(

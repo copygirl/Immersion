@@ -68,7 +68,7 @@ namespace Immersion.Voxel
 		public override int GetHashCode()
 			=> HashHelper.Combine(X, Y, Z);
 		public override string ToString()
-			=> $"BlockPos [{X}:{Y}:{Z}]";
+			=> $"BlockPos ({X}, {Y}, {Z})";
 		
 		
 		public static implicit operator BlockPos((int x, int y, int z) t)

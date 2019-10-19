@@ -1,6 +1,5 @@
 
 using System;
-using System.Collections;
 
 namespace Immersion.Utility
 {
@@ -47,6 +46,5 @@ namespace Immersion.Utility
 				hash = Combine(hash, objects[i].GetHashCode());
 			return hash;
 		}
-		
 	}
 }

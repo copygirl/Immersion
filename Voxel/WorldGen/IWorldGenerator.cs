@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Immersion.Voxel.Chunks;
 
 namespace Immersion.Voxel.WorldGen
@@ -6,8 +7,10 @@ namespace Immersion.Voxel.WorldGen
 	{
 		string Identifier { get; }
 		
-		int Priority { get; }
+		IEnumerable<string> Dependencies { get; }
 		
-		bool Populate(IChunk chunk);
+		IEnumerable<(Neighbor, string)> NeighborDependencies { get; }
+		
+		void Populate(World world, IChunk chunk);
 	}
 }
