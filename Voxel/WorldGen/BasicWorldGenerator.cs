@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Immersion.Voxel.Blocks;
 using Immersion.Voxel.Chunks;
 
 namespace Immersion.Voxel.WorldGen

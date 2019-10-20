@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Immersion.Voxel;
+using Immersion.Voxel.Blocks;
 using Immersion.Voxel.Chunks;
 
 namespace Immersion

@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using Godot;
 using Immersion.Utility;
+using Immersion.Voxel.Blocks;
 using static Godot.Vector3;
 
 namespace Immersion.Voxel

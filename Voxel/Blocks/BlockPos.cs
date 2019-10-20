@@ -3,7 +3,7 @@ using System;
 using Godot;
 using Immersion.Utility;
 
-namespace Immersion.Voxel
+namespace Immersion.Voxel.Blocks
 {
 	public readonly struct BlockPos : IEquatable<BlockPos>
 	{

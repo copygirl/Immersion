@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Immersion.Voxel.Blocks;
 using Immersion.Voxel.Chunks;
 
 namespace Immersion.Voxel.WorldGen

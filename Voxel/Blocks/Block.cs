@@ -1,5 +1,5 @@
 
-namespace Immersion.Voxel
+namespace Immersion.Voxel.Blocks
 {
 	public class Block : IBlock
 	{

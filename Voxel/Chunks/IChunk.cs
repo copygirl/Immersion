@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Immersion.Voxel.Blocks;
 
 namespace Immersion.Voxel.Chunks
 {

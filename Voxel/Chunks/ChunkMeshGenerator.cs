@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using Immersion.Voxel.Blocks;
 
 namespace Immersion.Voxel.Chunks
 {
