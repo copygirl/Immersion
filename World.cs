@@ -4,28 +4,24 @@ using Immersion.Voxel.Chunks;
 
 namespace Immersion
 {
-	[Tool]
 	public class World : Spatial
 	{
 		#pragma warning disable 8618
 		public ChunkManager Chunks { get; private set; }
 		#pragma warning restore 8618
-
-		[Export]
-		public Texture? Texture { get; set; }
-		[Export]
-		public int TextureCellSize { get; set; } = 16;
-		
 		
 		public override void _Ready()
 		{
+			var texture = GD.Load<Texture>("Resources/terrain.png");
+			texture.Flags = (int)Texture.FlagsEnum.ConvertToLinear;
+			
 			var material = new SpatialMaterial {
-				AlbedoTexture = Texture,
+				AlbedoTexture = texture,
 				VertexColorUseAsAlbedo = true,
 			};
 			
 			var atlas = new TextureAtlas<string>(
-				Texture!.GetWidth(), Texture.GetHeight(), TextureCellSize);
+				texture.GetWidth(), texture.GetHeight(), 16);
 			atlas.Add("air"  , 0, 0);
 			atlas.Add("stone", 1, 0);
 			atlas.Add("dirt" , 2, 0);
