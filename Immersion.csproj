@@ -57,12 +57,15 @@
     <Compile Include="Voxel/Blocks/Block.cs" />
     <Compile Include="Voxel/Blocks/BlockFacing.cs" />
     <Compile Include="Voxel/Blocks/BlockPos.cs" />
+    <Compile Include="Voxel/Blocks/CubeBlockModel.cs" />
     <Compile Include="Voxel/Blocks/IBlock.cs" />
+    <Compile Include="Voxel/Blocks/IBlockModel.cs" />
     <Compile Include="Voxel/Chunks/ChunkManager.cs" />
     <Compile Include="Voxel/Chunks/ChunkMeshGenerator.cs" />
     <Compile Include="Voxel/Chunks/ChunkNeighbors.cs" />
     <Compile Include="Voxel/Chunks/ChunkPaletteStorage.cs" />
     <Compile Include="Voxel/Chunks/ChunkPos.cs" />
+    <Compile Include="Voxel/Chunks/ChunkShapeGenerator.cs" />
     <Compile Include="Voxel/Chunks/ChunkTracker.cs" />
     <Compile Include="Voxel/Chunks/IChunk.cs" />
     <Compile Include="Voxel/WorldGen/BasicWorldGenerator.cs" />

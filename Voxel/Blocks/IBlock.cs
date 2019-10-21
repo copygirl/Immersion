@@ -5,8 +5,8 @@ namespace Immersion.Voxel.Blocks
 	{
 		bool IsAir { get; }
 		
-		bool IsSideCulled(BlockFacing facing);
-		
 		string Texture { get; }
+		
+		IBlockModel Model { get; }
 	}
 }

@@ -1,25 +1,18 @@
+using System.Collections.Generic;
 using Godot;
 using Immersion.Voxel.Blocks;
 
 namespace Immersion.Voxel.Chunks
 {
-	public class ChunkMeshGenerator
+	public class ChunkShapeGenerator
 	{
+		private readonly List<Vector3> _buffer
+			= new List<Vector3>();
 		private readonly IBlock[] _neighbors
 			= new IBlock[BlockFacings.ALL.Count];
 		
-		public Material Material { get; set; }
-		public TextureAtlas<string> TextureAtlas { get; set; }
-		
-		public ChunkMeshGenerator(Material material, TextureAtlas<string> atlas)
-			=> (Material, TextureAtlas) = (material, atlas);
-		
-		public ArrayMesh? Generate(IChunk chunk)
+		public Shape? Generate(IChunk chunk)
 		{
-			var st = new SurfaceTool();
-			st.Begin(Mesh.PrimitiveType.Triangles);
-			st.SetMaterial(Material);
-			
 			var center = chunk.Neighbors[0, 0, 0]!;
 			for (var x = 0; x < 16; x++)
 			for (var y = 0; y < 16; y++)
@@ -27,11 +20,14 @@ namespace Immersion.Voxel.Chunks
 				var block = center.Storage[x, y, z];
 				foreach (var facing in BlockFacings.ALL)
 					_neighbors[(int)facing] = GetNeighborBlock(chunk.Neighbors, x, y, z, facing);
-				block.Model.RenderIntoMesh(block, (x, y, z), TextureAtlas, st, _neighbors);
+				block.Model.AddCollisionShape(block, (x, y, z), _buffer, _neighbors);
 			}
 			
-			var mesh = st.Commit();
-			return (mesh.GetSurfaceCount() > 0) ? mesh : null;
+			if (_buffer.Count == 0) return null;
+			var shape = new ConcavePolygonShape();
+			shape.SetFaces(_buffer.ToArray());
+			_buffer.Clear();
+			return shape;
 		}
 		
 		private IBlock GetNeighborBlock(

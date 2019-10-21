@@ -11,7 +11,6 @@ namespace Immersion
 	{
 		public World World { get; }
 		public ChunkPos Position { get; }
-		public ChunkState State { get; internal set; }
 		public ChunkNeighbors Neighbors { get; }
 		public IVoxelStorage<IBlock> Storage { get; }
 			= new ChunkPaletteStorage<IBlock>(Block.AIR);
@@ -24,20 +23,6 @@ namespace Immersion
 			Position  = pos;
 			Transform = new Transform(Basis.Identity, pos.GetOrigin());
 			Neighbors = new ChunkNeighbors(this);
-		}
-		
-		public void GenerateMesh(ChunkMeshGenerator generator)
-		{
-			var mesh = generator.Generate(Neighbors);
-			if (mesh == null) return;
-			var shape = mesh.CreateTrimeshShape();
-			
-			var meshInstance = new MeshInstance { Mesh = mesh };
-			var staticBody   = new StaticBody();
-			staticBody.AddChild(new CollisionShape { Shape = shape });
-			
-			AddChild(meshInstance);
-			AddChild(staticBody);
 		}
 	}
 }

@@ -15,14 +15,10 @@ namespace Immersion.Voxel.Chunks
 		private readonly SortedDictionary<int, HashSet<ChunkPos>> _toSimulate
 			= new SortedDictionary<int, HashSet<ChunkPos>>(new ReverseComparer<int>());
 		
-		public ChunkManager Chunks { get; }
+		public event Action<ChunkPos>? OnChunkLostTracking;
 		
 		public IEnumerable<ChunkPos> SimulationRequestedChunks
 			=> _toSimulate.SelectMany(kvp => kvp.Value);
-		
-		
-		public ChunkTracker(ChunkManager chunks)
-			=> Chunks = chunks;
 		
 		
 		public void StartTracking(Spatial tracked, int simDistance)
@@ -52,6 +48,7 @@ namespace Immersion.Voxel.Chunks
 		
 		public void MarkChunkReady(ChunkPos pos)
 		{
+			lock (SimulationRequestedChunks)
 			foreach (var (_, chunks) in _toSimulate)
 				if (chunks.Remove(pos)) return;
 		}
@@ -91,14 +88,15 @@ namespace Immersion.Voxel.Chunks
 			} else {
 				OnChunkStopTracking(pos, chunk.MaxWeight);
 				_chunks.Remove(pos);
-				Chunks.TryRemove(pos);
+				OnChunkLostTracking?.Invoke(pos);
 			}
 		}
 		
 		
 		private void OnChunkStartTracking(ChunkPos pos, int weight)
 		{
-			if ((weight >= 0) && (Chunks[pos]?.State != ChunkState.Ready))
+			if (weight >= 0)
+			lock (SimulationRequestedChunks)
 				_toSimulate.GetOrAdd(weight, () => new HashSet<ChunkPos>()).Add(pos);
 		}
 		
@@ -112,7 +110,8 @@ namespace Immersion.Voxel.Chunks
 		
 		private void OnChunkStopTracking(ChunkPos pos, int weight)
 		{
-			if (weight >= 0) {
+			if (weight >= 0)
+			lock (SimulationRequestedChunks) {
 				var chunks = _toSimulate.GetOrNull(weight);
 				if (chunks != null) {
 					chunks.Remove(pos);
