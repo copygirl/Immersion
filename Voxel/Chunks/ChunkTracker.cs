@@ -17,6 +17,7 @@ namespace Immersion.Voxel.Chunks
 		
 		public event Action<ChunkPos>? OnChunkLostTracking;
 		
+		public object SynchronizationObject { get; } = new object();
 		public IEnumerable<ChunkPos> SimulationRequestedChunks
 			=> _toSimulate.SelectMany(kvp => kvp.Value);
 		
@@ -25,30 +26,38 @@ namespace Immersion.Voxel.Chunks
 			=> StartTracking(tracked, simDistance, simDistance + 4);
 		public void StartTracking(Spatial tracked, int simDistance, int keepDistance)
 		{
-			if (_spatials.ContainsKey(tracked)) throw new InvalidOperationException(
-				$"The Spatial node '{tracked}' is already being tracked");
-			var data = new TrackedSpatialData(tracked, simDistance, keepDistance);
-			_spatials.Add(tracked, data);
+			lock (_spatials) {
+				if (_spatials.ContainsKey(tracked)) throw new InvalidOperationException(
+					$"The Spatial node '{tracked}' is already being tracked");
+				var data = new TrackedSpatialData(tracked, simDistance, keepDistance);
+				_spatials.Add(tracked, data);
+			}
 		}
 		
 		public void StopTracking(Spatial tracked)
 		{
-			var data = _spatials.GetOrThrow(tracked, () => new ArgumentException(
-				$"'{nameof(tracked)}' (={tracked}) is not being tracked", nameof(tracked)));
-			_spatials.Remove(tracked);
-			foreach (var chunk in data.Chunks)
-				Untrack(data, chunk);
+			lock (_spatials) {
+				var data = _spatials.GetOrThrow(tracked, () => new ArgumentException(
+					$"'{nameof(tracked)}' (={tracked}) is not being tracked", nameof(tracked)));
+				_spatials.Remove(tracked);
+				
+				lock (SynchronizationObject)
+				foreach (var chunk in data.Chunks)
+					Untrack(data, chunk);
+			}
 		}
 		
 		public void Update()
 		{
+			lock (_spatials) // FIXME: This is bad, but can be ignored since we don't update _spatials.
 			foreach (var data in _spatials.Values)
+			lock (SynchronizationObject)
 				data.Update(Track, Untrack);
 		}
 		
 		public void MarkChunkReady(ChunkPos pos)
 		{
-			lock (SimulationRequestedChunks)
+			lock (SynchronizationObject)
 			foreach (var (_, chunks) in _toSimulate)
 				if (chunks.Remove(pos)) return;
 		}
@@ -96,7 +105,6 @@ namespace Immersion.Voxel.Chunks
 		private void OnChunkStartTracking(ChunkPos pos, int weight)
 		{
 			if (weight >= 0)
-			lock (SimulationRequestedChunks)
 				_toSimulate.GetOrAdd(weight, () => new HashSet<ChunkPos>()).Add(pos);
 		}
 		
@@ -110,8 +118,7 @@ namespace Immersion.Voxel.Chunks
 		
 		private void OnChunkStopTracking(ChunkPos pos, int weight)
 		{
-			if (weight >= 0)
-			lock (SimulationRequestedChunks) {
+			if (weight >= 0) {
 				var chunks = _toSimulate.GetOrNull(weight);
 				if (chunks != null) {
 					chunks.Remove(pos);

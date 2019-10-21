@@ -27,8 +27,7 @@ namespace Immersion
 			atlas.Add("dirt" , 2, 0);
 			atlas.Add("grass", 3, 0);
 			
-			var generator = new ChunkMeshGenerator(material, atlas);
-			Chunks = new ChunkManager(this, generator);
+			Chunks = new ChunkManager(this, material, atlas);
 			Chunks.OnChunkFinished += (chunk) => AddChild((Chunk)chunk);
 			Chunks.OnChunkRemoved  += (chunk) => RemoveChild((Chunk)chunk);
 			Chunks.Tracker.StartTracking(GetNode<Spatial>("../Player"), 12);
