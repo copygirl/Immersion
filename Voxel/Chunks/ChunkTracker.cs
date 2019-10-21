@@ -17,7 +17,6 @@ namespace Immersion.Voxel.Chunks
 		
 		public event Action<ChunkPos>? OnChunkLostTracking;
 		
-		public object SynchronizationObject { get; } = new object();
 		public IEnumerable<ChunkPos> SimulationRequestedChunks
 			=> _toSimulate.SelectMany(kvp => kvp.Value);
 		
@@ -41,7 +40,6 @@ namespace Immersion.Voxel.Chunks
 					$"'{nameof(tracked)}' (={tracked}) is not being tracked", nameof(tracked)));
 				_spatials.Remove(tracked);
 				
-				lock (SynchronizationObject)
 				foreach (var chunk in data.Chunks)
 					Untrack(data, chunk);
 			}
@@ -51,13 +49,11 @@ namespace Immersion.Voxel.Chunks
 		{
 			lock (_spatials) // FIXME: This is bad, but can be ignored since we don't update _spatials.
 			foreach (var data in _spatials.Values)
-			lock (SynchronizationObject)
 				data.Update(Track, Untrack);
 		}
 		
 		public void MarkChunkReady(ChunkPos pos)
 		{
-			lock (SynchronizationObject)
 			foreach (var (_, chunks) in _toSimulate)
 				if (chunks.Remove(pos)) return;
 		}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 using Immersion.Utility;
 using Immersion.Voxel.WorldGen;
@@ -16,11 +17,9 @@ namespace Immersion.Voxel.Chunks
 		private readonly Material _material;
 		private readonly TextureAtlas<string> _textureAtlas;
 			
-		private readonly HashSet<ChunkPos> _workingChunks
-			= new HashSet<ChunkPos>();
 		private readonly List<(ChunkPos, Mesh?, Shape?)> _finishedChunks
 			= new List<(ChunkPos, Mesh?, Shape?)>();
-		private readonly Thread[] _workerThreads;
+		private readonly Thread _workerThread;
 		
 		public event Action<IChunk>? OnChunkCreated;
 		public event Action<IChunk>? OnChunkFinished;
@@ -48,12 +47,11 @@ namespace Immersion.Voxel.Chunks
 			_textureAtlas = textureAtlas;
 			
 			Tracker = new ChunkTracker();
-			Tracker.OnChunkLostTracking += (pos) => TryRemove(pos);
+			// FIXME: Doing this outside the main thread crashes.
+			// Tracker.OnChunkLostTracking += (pos) => TryRemove(pos);
 			
-			_workerThreads = Enumerable.Range(0, 2).Select(i => new Thread(Work)).ToArray();
-			foreach (var worker in _workerThreads) worker.Start();
-			
-			new Thread(() => { while (true) Tracker.Update(); }).Start();
+			_workerThread = new Thread(Work);
+			_workerThread.Start();
 		}
 		
 		
@@ -121,91 +119,83 @@ namespace Immersion.Voxel.Chunks
 			}
 		}
 		
-		public void Work()
+		private void Work()
 		{
-			var meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
-			var shapeGen = new ChunkShapeGenerator();
+			const int MAX_TASKS = 24;
+			var working = new Dictionary<ChunkPos, Task<object>>();
+			var generatorLookup = Generators.ToDictionary(gen => gen.Identifier);
 			
 			while (true) {
-				ChunkPos? nextChunkPos = null;
-				lock (_workingChunks)
-				lock (Tracker.SynchronizationObject) {
-					var enumerator = Tracker.SimulationRequestedChunks.GetEnumerator();
-					while (enumerator.MoveNext()) {
-						var p = enumerator.Current;
-						if (_workingChunks.Contains(p)) continue;
-						lock (_chunks) if (_chunks.GetOrNull(p)?.IsFinished == true) continue;
-						
-						nextChunkPos = p;
-						_workingChunks.Add(p);
-						break;
+				Tracker.Update();
+				
+				var finishedWork = working.Where(kvp => kvp.Value.IsCompleted).ToArray();
+				foreach (var (pos, task) in finishedWork) {
+					working.Remove(pos);
+					switch (task.Result) {
+						case IWorldGenerator generator:
+							this[pos]!.AppliedGenerators.Add(generator.Identifier);
+							break;
+						case "done":
+							Tracker.MarkChunkReady(pos);
+							break;
 					}
 				}
-				if (nextChunkPos == null)
-					{ Thread.Sleep(0); continue; }
 				
-				var pos   = nextChunkPos.Value;
-				var data  = GetOrCreateInternal(pos);
-				var ready = GenerateChunk(data);
+				foreach (var pos in Tracker.SimulationRequestedChunks) {
+					if (working.Count >= MAX_TASKS) break;
+					if (working.ContainsKey(pos)) continue;
+					var data  = GetOrCreateInternal(pos);
+					var chunk = data.Chunk;
 					
-				var allNeighborsReady = true;
-				foreach (var neighbor in Neighbors.ALL) {
-					var neighborPos  = pos + neighbor;
-					var neighborData = GetOrCreateInternal(neighborPos);
-					if (!TryDoChunkWork(neighborPos, () => GenerateChunk(neighborData)))
-						allNeighborsReady = false;
-				}
-				
-				if (ready && allNeighborsReady) {
-					var mesh  = meshGen.Generate(data.Chunk);
-					var shape = shapeGen.Generate(data.Chunk);
-					lock (_finishedChunks)
-						_finishedChunks.Add((pos, mesh, shape));
-					lock (_chunks)
-						_chunks[pos].IsFinished = true;
-					Tracker.MarkChunkReady(pos);
-				}
-				
-				lock (_workingChunks)
-					_workingChunks.Remove(pos);
-			}
-		}
-		
-		private bool GenerateChunk(ChunkData data, string? dependency = null)
-		{
-			var chunk = data.Chunk;
-			foreach (var generator in Generators) {
-				if (!chunk.AppliedGenerators.Contains(generator.Identifier)) {
-					foreach (var (neighbor, dep) in generator.NeighborDependencies) {
-						var neighborPos  = chunk.Position + neighbor;
-						var neighborData = GetOrCreateInternal(neighborPos);
+					if (!data.IsGenerated) {
 						
-						lock (neighborData.Chunk.AppliedGenerators)
-						if (neighborData.Chunk.AppliedGenerators.Contains(dep)) continue;
+						var nextGenerator = Generators
+							.Where(gen => !chunk.AppliedGenerators.Contains(gen.Identifier))
+							.FirstOrNull();
 						
-						if (!TryDoChunkWork(neighborPos, () => GenerateChunk(neighborData, dep)))
-							return false;
+						if (nextGenerator == null) {
+							data.IsGenerated = true;
+							continue;
+						}
+						
+						if (!nextGenerator.NeighborDependencies
+							.All(((Neighbor neighbor, string dep) t)
+								=> !working.ContainsKey(pos + t.neighbor)
+								&& (this[pos + t.neighbor]?.AppliedGenerators.Contains(t.dep) == true)))
+							continue;
+						
+						var task = Task.Run<object>(() => {
+							nextGenerator.Populate(World, chunk);
+							return nextGenerator;
+						});
+						working.Add(pos, task);
+						
+						// This is silly but it's an acceptable workaround for now.
+						var neighborTask = task.ContinueWith<object>(task => "neighbor");
+						foreach (var (neighbor, _) in nextGenerator.NeighborDependencies)
+							working.Add(pos + neighbor, neighborTask);
+						
+					} else if (!data.IsFinished) {
+						lock (_chunks)
+						if (Neighbors.ALL.All(n => _chunks.GetOrNull(pos + n)?.IsGenerated == true)) {
+							working.Add(pos, Task.Run<object>(() => {
+								// FIXME: Move this out of here.
+								var meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
+								var shapeGen = new ChunkShapeGenerator();
+								
+								var mesh  = meshGen.Generate(chunk);
+								var shape = shapeGen.Generate(chunk);
+								lock (_finishedChunks)
+									_finishedChunks.Add((pos, mesh, shape));
+								data.IsFinished = true;
+								return "done";
+							}));
+						}
 					}
-					generator.Populate(World, chunk);
-					lock (chunk.AppliedGenerators)
-						chunk.AppliedGenerators.Add(generator.Identifier);
 				}
-				if (generator.Identifier == dependency) return true;
+				
+				Thread.Sleep(0);
 			}
-			data.IsGenerated = true;
-			return true;
-		}
-		
-		private bool TryDoChunkWork(ChunkPos pos, Func<bool> action)
-		{
-			lock (_workingChunks) {
-				if (_workingChunks.Contains(pos)) return false;
-				else _workingChunks.Add(pos);
-			}
-			var success = action();
-			lock (_workingChunks)
-				_workingChunks.Remove(pos);
-			return success;
 		}
 		
 		
