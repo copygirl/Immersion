@@ -3,7 +3,7 @@ using System.Text;
 using Godot;
 using Immersion.Utility;
 using Immersion.Voxel.Blocks;
-using static Godot.Vector3;
+using Axis = Godot.Vector3.Axis;
 
 namespace Immersion.Voxel
 {
