@@ -16,14 +16,7 @@ namespace Immersion.Voxel.Chunks
 		
 		private readonly Material _material;
 		private readonly TextureAtlas<string> _textureAtlas;
-			
-		private readonly List<(ChunkPos, Mesh?, Shape?)> _finishedChunks
-			= new List<(ChunkPos, Mesh?, Shape?)>();
 		private readonly Thread _workerThread;
-		
-		public event Action<IChunk>? OnChunkCreated;
-		public event Action<IChunk>? OnChunkFinished;
-		public event Action<IChunk>? OnChunkRemoved;
 		
 		public World World { get; }
 		public ChunkTracker Tracker { get; }
@@ -47,8 +40,7 @@ namespace Immersion.Voxel.Chunks
 			_textureAtlas = textureAtlas;
 			
 			Tracker = new ChunkTracker();
-			// FIXME: Doing this outside the main thread crashes.
-			// Tracker.OnChunkLostTracking += (pos) => TryRemove(pos);
+			Tracker.OnChunkLostTracking += (pos) => TryRemove(pos);
 			
 			_workerThread = new Thread(Work);
 			_workerThread.Start();
@@ -71,7 +63,6 @@ namespace Immersion.Voxel.Chunks
 				}
 				
 				_chunks.Add(chunk.Position, data = new ChunkData(chunk));
-				OnChunkCreated?.Invoke(chunk);
 				return data;
 			}
 		}
@@ -94,30 +85,12 @@ namespace Immersion.Voxel.Chunks
 					neighborChunk.Neighbors[neighbor] = null;
 				
 				_chunks.Remove(pos);
-				if (data.IsFinished)
-					OnChunkRemoved?.Invoke(data.Chunk);
+				if (data.IsFinished) World.ScheduleTask(() =>
+					World.RemoveChild((Chunk)data.Chunk));
 				return true;
 			}
 		}
 		
-		
-		public void Update()
-		{
-			lock (_finishedChunks) {
-				foreach (var (pos, mesh, shape) in _finishedChunks) {
-					var chunk = (Chunk)this[pos]!;
-					if (mesh != null)
-						chunk.AddChild(new MeshInstance { Mesh = mesh });
-					if (shape != null) {
-						var body = new StaticBody();
-						body.AddChild(new CollisionShape { Shape = shape });
-						chunk.AddChild(body);
-					}
-					OnChunkFinished?.Invoke(chunk);
-				}
-				_finishedChunks.Clear();
-			}
-		}
 		
 		private void Work()
 		{
@@ -135,8 +108,21 @@ namespace Immersion.Voxel.Chunks
 						case IWorldGenerator generator:
 							this[pos]!.AppliedGenerators.Add(generator.Identifier);
 							break;
-						case "done":
+						case ValueTuple<Mesh?, Shape?> tuple:
+							var (mesh, shape) = tuple;
 							Tracker.MarkChunkReady(pos);
+							
+							var chunk = (Chunk)this[pos]!;
+							if (mesh != null)
+								chunk.AddChild(new MeshInstance { Mesh = mesh });
+							if (shape != null) {
+								var body = new StaticBody();
+								body.AddChild(new CollisionShape { Shape = shape });
+								chunk.AddChild(body);
+							}
+							
+							World.ScheduleTask(() =>
+								World.AddChild(chunk));
 							break;
 					}
 				}
@@ -183,12 +169,10 @@ namespace Immersion.Voxel.Chunks
 								var meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
 								var shapeGen = new ChunkShapeGenerator();
 								
-								var mesh  = meshGen.Generate(chunk);
-								var shape = shapeGen.Generate(chunk);
-								lock (_finishedChunks)
-									_finishedChunks.Add((pos, mesh, shape));
+								Mesh?  mesh  = meshGen.Generate(chunk);
+								Shape? shape = shapeGen.Generate(chunk);
 								data.IsFinished = true;
-								return "done";
+								return (mesh, shape);
 							}));
 						}
 					}
