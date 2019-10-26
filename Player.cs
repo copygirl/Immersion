@@ -1,5 +1,7 @@
 using System;
 using Godot;
+using Immersion.Voxel.Blocks;
+using Immersion.Voxel.Chunks;
 
 namespace Immersion
 {
@@ -24,8 +26,9 @@ namespace Immersion
 		
 		
 		#pragma warning disable 8618
-		private Camera _camera;
+		private World _world;
 		private Spatial _rotation;
+		private Camera _camera;
 		#pragma warning restore 8618
 		
 		private Vector3 _velocity = Vector3.Zero;
@@ -37,6 +40,7 @@ namespace Immersion
 		
 		public override void _Ready()
 		{
+			_world    = GetNode<World>("../World");
 			_rotation = GetNode<Spatial>("Rotation");
 			_camera   = GetNode<Camera>("Rotation/Camera");
 			Input.SetMouseMode(Input.MouseMode.Captured);
@@ -44,6 +48,35 @@ namespace Immersion
 		
 		public override void _Process(float delta)
 		{
+			var breaking = Input.IsActionJustPressed("action_break");
+			var placing  = Input.IsActionJustPressed("action_place");
+			if (!breaking && !placing) return;
+			
+			var rayLength = 4.0F;
+			var mousePos  = GetViewport().GetMousePosition();
+			var startPos  = _camera.ProjectRayOrigin(mousePos);
+			var endPos    = startPos + _camera.ProjectRayNormal(mousePos) * rayLength;
+			
+			var result  = GetWorld().GetDirectSpaceState().IntersectRay(startPos, endPos);
+			if (result.Count == 0) return;
+			
+			var pos    = (Vector3)result["position"];
+			var normal = (Vector3)result["normal"];
+			var block  = (pos + normal * (placing ? 0.5F : -0.5F)).ToBlockPos();
+			
+			var chunk     = _world.Chunks[block.ToChunkPos()]!;
+			var (x, y, z) = block.ToChunkRelative();
+			chunk.Storage[x, y, z] = (breaking ? Block.AIR : Block.STONE);
+			_world.Chunks.ForceUpdate(chunk);
+			
+			foreach (var facing in BlockFacings.ALL) {
+				var neighborChunkPos = (block + facing).ToChunkPos();
+				if (neighborChunkPos == chunk.Position) continue;
+				
+				var neighborChunk = _world.Chunks[neighborChunkPos];
+				if (neighborChunk != null)
+					_world.Chunks.ForceUpdate(neighborChunk);
+			}
 		}
 		
 		public override void _PhysicsProcess(float delta)

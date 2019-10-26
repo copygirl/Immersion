@@ -46,6 +46,8 @@ namespace Immersion.Voxel.Blocks
 			= { 0, 3, 1,  1, 3, 2 };
 		
 		
+		// IBlockModel implementation
+		
 		public void RenderIntoMesh(IBlock block, BlockPos pos,
 			TextureAtlas<string> textureAtlas,
 			SurfaceTool st, IBlock[] neighborsByFacing)
@@ -95,6 +97,9 @@ namespace Immersion.Voxel.Blocks
 				}
 			}
 		}
+		
+		
+		// IBlockModelCullSide implementation
 		
 		public bool CanSideCull(IBlock block, BlockFacing facing) => true;
 	}

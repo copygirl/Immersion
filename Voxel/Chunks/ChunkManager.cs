@@ -92,6 +92,44 @@ namespace Immersion.Voxel.Chunks
 		}
 		
 		
+		public void ForceUpdate(IChunk chunk)
+		{
+			var meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
+			var shapeGen = new ChunkShapeGenerator();
+			
+			Mesh?  mesh  = meshGen.Generate(chunk);
+			Shape? shape = shapeGen.Generate(chunk);
+			
+			SetChunkMeshAndShape(chunk, mesh, shape);
+		}
+		
+		private void SetChunkMeshAndShape(IChunk chunk, Mesh? mesh, Shape? shape)
+		{
+			var godotChunk = (Chunk)chunk;
+			var hasMesh = godotChunk.HasNode("MeshInstance");
+			var hasBody = godotChunk.HasNode("StaticBody");
+			var meshNode  = hasMesh ? godotChunk.GetNode<MeshInstance>("MeshInstance") : null;
+			var bodyNode  = hasBody ? godotChunk.GetNode<StaticBody>("StaticBody") : null;
+			var shapeNode = bodyNode?.GetNode<CollisionShape>("CollisionShape");
+			
+			if (mesh != null) {
+				if (!hasMesh) meshNode = new MeshInstance();
+				meshNode!.Mesh = mesh;
+				if (!hasMesh) godotChunk.AddChild(meshNode, true);
+			} else if (meshNode != null) godotChunk.RemoveChild(meshNode);
+			
+			if (shape != null) {
+				if (!hasBody) {
+					bodyNode  = new StaticBody();
+					shapeNode = new CollisionShape();
+					bodyNode.AddChild(shapeNode, true);
+				}
+				shapeNode!.Shape = shape;
+				if (!hasBody) godotChunk.AddChild(bodyNode, true);
+			} else if (bodyNode != null) godotChunk.RemoveChild(bodyNode);
+		}
+		
+		
 		private void Work()
 		{
 			const int MAX_TASKS = 24;
@@ -113,13 +151,7 @@ namespace Immersion.Voxel.Chunks
 							Tracker.MarkChunkReady(pos);
 							
 							var chunk = (Chunk)this[pos]!;
-							if (mesh != null)
-								chunk.AddChild(new MeshInstance { Mesh = mesh });
-							if (shape != null) {
-								var body = new StaticBody();
-								body.AddChild(new CollisionShape { Shape = shape });
-								chunk.AddChild(body);
-							}
+							SetChunkMeshAndShape(chunk, mesh, shape);
 							
 							World.ScheduleTask(() =>
 								World.AddChild(chunk));
