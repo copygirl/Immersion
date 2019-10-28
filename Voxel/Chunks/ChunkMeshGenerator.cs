@@ -7,6 +7,8 @@ namespace Immersion.Voxel.Chunks
 	{
 		private readonly IBlock[] _neighbors
 			= new IBlock[BlockFacings.ALL.Count];
+		private readonly SurfaceTool _surface
+			= new SurfaceTool();
 		
 		public Material Material { get; set; }
 		public TextureAtlas<string> TextureAtlas { get; set; }
@@ -16,9 +18,8 @@ namespace Immersion.Voxel.Chunks
 		
 		public ArrayMesh? Generate(IChunk chunk)
 		{
-			var st = new SurfaceTool();
-			st.Begin(Mesh.PrimitiveType.Triangles);
-			st.SetMaterial(Material);
+			_surface.Begin(Mesh.PrimitiveType.Triangles);
+			_surface.SetMaterial(Material);
 			
 			var center = chunk.Neighbors[0, 0, 0]!;
 			for (var x = 0; x < 16; x++)
@@ -27,10 +28,10 @@ namespace Immersion.Voxel.Chunks
 				var block = center.Storage[x, y, z];
 				foreach (var facing in BlockFacings.ALL)
 					_neighbors[(int)facing] = GetNeighborBlock(chunk.Neighbors, x, y, z, facing);
-				block.Model.RenderIntoMesh(block, (x, y, z), TextureAtlas, st, _neighbors);
+				block.Model.RenderIntoMesh(block, (x, y, z), TextureAtlas, _surface, _neighbors);
 			}
 			
-			var mesh = st.Commit();
+			var mesh = _surface.Commit();
 			return (mesh.GetSurfaceCount() > 0) ? mesh : null;
 		}
 		

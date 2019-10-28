@@ -136,6 +136,8 @@ namespace Immersion.Voxel.Chunks
 			var working = new Dictionary<ChunkPos, Task<object>>();
 			var generatorLookup = Generators.ToDictionary(gen => gen.Identifier);
 			
+			var meshShapeGenerators = new Stack<(ChunkMeshGenerator, ChunkShapeGenerator)>();
+			
 			while (true) {
 				Tracker.Update();
 				
@@ -146,8 +148,9 @@ namespace Immersion.Voxel.Chunks
 						case IWorldGenerator generator:
 							this[pos]!.AppliedGenerators.Add(generator.Identifier);
 							break;
-						case ValueTuple<Mesh?, Shape?> tuple:
-							var (mesh, shape) = tuple;
+						case ValueTuple<Mesh?, Shape?, (ChunkMeshGenerator, ChunkShapeGenerator)> tuple:
+							var (mesh, shape, meshShapeGen) = tuple;
+							meshShapeGenerators.Push(meshShapeGen);
 							Tracker.MarkChunkReady(pos);
 							
 							var chunk = (Chunk)this[pos]!;
@@ -194,17 +197,21 @@ namespace Immersion.Voxel.Chunks
 							working.Add(pos + neighbor, neighborTask);
 						
 					} else if (!data.IsFinished) {
+						ChunkMeshGenerator meshGen;
+						ChunkShapeGenerator shapeGen;
+						
+						if (meshShapeGenerators.Count == 0) {
+							meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
+							shapeGen = new ChunkShapeGenerator();
+						} else (meshGen, shapeGen) = meshShapeGenerators.Pop();
+						
 						lock (_chunks)
 						if (Neighbors.ALL.All(n => _chunks.GetOrNull(pos + n)?.IsGenerated == true)) {
 							working.Add(pos, Task.Run<object>(() => {
-								// FIXME: Move this out of here.
-								var meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
-								var shapeGen = new ChunkShapeGenerator();
-								
 								Mesh?  mesh  = meshGen.Generate(chunk);
 								Shape? shape = shapeGen.Generate(chunk);
 								data.IsFinished = true;
-								return (mesh, shape);
+								return (mesh, shape, (meshGen, shapeGen));
 							}));
 						}
 					}

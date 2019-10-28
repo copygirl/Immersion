@@ -6,10 +6,10 @@ namespace Immersion.Voxel.Chunks
 {
 	public class ChunkShapeGenerator
 	{
-		private readonly List<Vector3> _buffer
-			= new List<Vector3>();
 		private readonly IBlock[] _neighbors
 			= new IBlock[BlockFacings.ALL.Count];
+		private readonly List<Vector3> _buffer
+			= new List<Vector3>();
 		
 		public Shape? Generate(IChunk chunk)
 		{
