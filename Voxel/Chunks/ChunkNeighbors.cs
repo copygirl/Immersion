@@ -5,10 +5,10 @@ namespace Immersion.Voxel.Chunks
 	public class ChunkNeighbors
 	{
 		private static readonly int CENTER_INDEX = GetIndex(0, 0, 0);
-		
+
 		private readonly IChunk?[] _chunks
 			= new IChunk?[3 * 3 * 3];
-		
+
 		public IChunk? this[int x, int y, int z] {
 			get => _chunks[GetIndex(x, y, z)];
 			set => _chunks[GetIndex(x, y, z)] = value;
@@ -17,16 +17,16 @@ namespace Immersion.Voxel.Chunks
 			get => _chunks[GetIndex(neighbor)];
 			set => _chunks[GetIndex(neighbor)] = value;
 		}
-		
+
 		public ChunkNeighbors(IChunk center)
 			=> this[0, 0, 0] = center;
-		
+
 		internal void Clear()
 		{
 			for (var i = 0; i < _chunks.Length; i++)
 			if (i != CENTER_INDEX) _chunks[i] = null;
 		}
-		
+
 		private static int GetIndex(Neighbor neighbor)
 			{ var (x, y, z) = neighbor; return GetIndex(x, y, z); }
 		private static int GetIndex(int x, int y, int z)

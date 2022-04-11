@@ -1,11 +1,5 @@
 {
-  "editor.insertSpaces": false,
-  "editor.trimAutoWhitespace": false,
-  "files.trimFinalNewlines": true,
-  "files.trimTrailingWhitespace": false,
-  
-  "[json]": {
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
-  },
+  "editor.semanticHighlighting.enabled": true,
+  "csharp.semanticHighlighting.enabled": true,
+  "omnisharp.useGlobalMono": "always",
 }

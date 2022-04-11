@@ -6,11 +6,9 @@ namespace Immersion.Voxel.Chunks
 {
 	public class ChunkShapeGenerator
 	{
-		private readonly IBlock[] _neighbors
-			= new IBlock[BlockFacings.ALL.Count];
-		private readonly List<Vector3> _buffer
-			= new List<Vector3>();
-		
+		private readonly IBlock[] _neighbors = new IBlock[BlockFacings.ALL.Count];
+		private readonly List<Vector3> _buffer = new();
+
 		public Shape? Generate(IChunk chunk)
 		{
 			var center = chunk.Neighbors[0, 0, 0]!;
@@ -22,14 +20,13 @@ namespace Immersion.Voxel.Chunks
 					_neighbors[(int)facing] = GetNeighborBlock(chunk.Neighbors, x, y, z, facing);
 				block.Model.AddCollisionShape(block, (x, y, z), _buffer, _neighbors);
 			}
-			
+
 			if (_buffer.Count == 0) return null;
-			var shape = new ConcavePolygonShape();
-			shape.SetFaces(_buffer.ToArray());
+			var shape = new ConcavePolygonShape { Data = _buffer.ToArray() };
 			_buffer.Clear();
 			return shape;
 		}
-		
+
 		private IBlock GetNeighborBlock(
 			ChunkNeighbors chunks, int x, int y, int z, BlockFacing facing)
 		{

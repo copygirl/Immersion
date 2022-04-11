@@ -13,21 +13,20 @@ namespace Immersion.Voxel.Blocks
 		South, // +Z
 		North, // -Z
 	}
-	
+
 	public static class BlockFacings
 	{
 		public static readonly ImmutableSet<BlockFacing> HORIZONTALS =
-			new ImmutableSet<BlockFacing>(
-				BlockFacing.East , BlockFacing.West ,
-				BlockFacing.South, BlockFacing.North);
-		
+			new(BlockFacing.East , BlockFacing.West ,
+			    BlockFacing.South, BlockFacing.North);
+
 		public static readonly ImmutableSet<BlockFacing> VERTICALS =
-			new ImmutableSet<BlockFacing>(BlockFacing.Up, BlockFacing.Down);
-		
+			new(BlockFacing.Up, BlockFacing.Down);
+
 		public static readonly ImmutableSet<BlockFacing> ALL =
-			new ImmutableSet<BlockFacing>(HORIZONTALS, VERTICALS);
+			new(HORIZONTALS, VERTICALS);
 	}
-	
+
 	public static class BlockFacingExtensions
 	{
 		public static void Deconstruct(this BlockFacing self, out int x, out int y, out int z)
@@ -41,13 +40,13 @@ namespace Immersion.Voxel.Blocks
 				_ => throw new ArgumentException(
 					$"'{self}' is not a valid BlockFacing", nameof(self))
 			};
-		
+
 		public static bool IsValid(this BlockFacing self)
 			=> (self >= BlockFacing.East) && (self <= BlockFacing.North);
-		
+
 		public static BlockFacing GetOpposite(this BlockFacing self)
 			=> (BlockFacing)((int)self ^ 0b1);
-		
+
 		public static Vector3 ToVector3(this BlockFacing self)
 			=> self switch {
 				BlockFacing.East  => Vector3.Right,

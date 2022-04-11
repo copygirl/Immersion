@@ -8,20 +8,20 @@ namespace Immersion.Voxel.WorldGen
 		: IWorldGenerator
 	{
 		public static readonly string IDENTIFIER = nameof(SurfaceGrassGenerator);
-		
+
 		private const int AIR_BLOCKS_NEEDED   = 12;
 		private const int DIRT_BLOCKS_BENEATH =  3;
-		
+
 		public string Identifier { get; } = IDENTIFIER;
-		
+
 		public IEnumerable<string> Dependencies { get; } = new []{
 			BasicWorldGenerator.IDENTIFIER
 		};
-		
+
 		public IEnumerable<(Neighbor, string)> NeighborDependencies { get; } = new []{
 			(Neighbor.Up, BasicWorldGenerator.IDENTIFIER)
 		};
-		
+
 		public void Populate(World world, IChunk chunk)
 		{
 			var up = chunk.Neighbors[Neighbor.Up]!;

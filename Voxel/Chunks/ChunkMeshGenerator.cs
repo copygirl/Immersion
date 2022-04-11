@@ -5,22 +5,20 @@ namespace Immersion.Voxel.Chunks
 {
 	public class ChunkMeshGenerator
 	{
-		private readonly IBlock[] _neighbors
-			= new IBlock[BlockFacings.ALL.Count];
-		private readonly SurfaceTool _surface
-			= new SurfaceTool();
-		
+		private readonly IBlock[] _neighbors = new IBlock[BlockFacings.ALL.Count];
+		private readonly SurfaceTool _surface = new();
+
 		public Material Material { get; set; }
 		public TextureAtlas<string> TextureAtlas { get; set; }
-		
+
 		public ChunkMeshGenerator(Material material, TextureAtlas<string> atlas)
 			=> (Material, TextureAtlas) = (material, atlas);
-		
+
 		public ArrayMesh? Generate(IChunk chunk)
 		{
 			_surface.Begin(Mesh.PrimitiveType.Triangles);
 			_surface.SetMaterial(Material);
-			
+
 			var center = chunk.Neighbors[0, 0, 0]!;
 			for (var x = 0; x < 16; x++)
 			for (var y = 0; y < 16; y++)
@@ -30,11 +28,11 @@ namespace Immersion.Voxel.Chunks
 					_neighbors[(int)facing] = GetNeighborBlock(chunk.Neighbors, x, y, z, facing);
 				block.Model.RenderIntoMesh(block, (x, y, z), TextureAtlas, _surface, _neighbors);
 			}
-			
+
 			var mesh = _surface.Commit();
 			return (mesh.GetSurfaceCount() > 0) ? mesh : null;
 		}
-		
+
 		private IBlock GetNeighborBlock(
 			ChunkNeighbors chunks, int x, int y, int z, BlockFacing facing)
 		{
