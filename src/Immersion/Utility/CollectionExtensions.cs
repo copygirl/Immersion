@@ -31,7 +31,7 @@ namespace Immersion.Utility
 		public static TValue? GetNullable<TKey, TValue>(
 			this IDictionary<TKey, TValue> self, TKey key)
 				where TValue : struct
-			=> self.TryGetValue(key, out var value) ? value : (TValue?)null;
+			=> self.TryGetValue(key, out var value) ? value : null;
 
 
 		public static TValue GetOrAdd<TKey, TValue>(
@@ -77,7 +77,7 @@ namespace Immersion.Utility
 			var enumerator = self.GetEnumerator();
 			return enumerator.MoveNext() ? enumerator.Current : null;
 		}
-		public static T? FirstOrNullable<T>(this IEnumerable<T> self)
+		public static T? FirstNullable<T>(this IEnumerable<T> self)
 			where T : struct
 		{
 			var enumerator = self.GetEnumerator();

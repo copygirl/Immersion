@@ -15,8 +15,8 @@ _global_script_class_icons={
 [application]
 
 config/name="Immersion"
-run/main_scene="res://Level.tscn"
-config/icon="res://icon.png"
+run/main_scene="res://scenes/Level.tscn"
+config/icon="res://assets/app_icon.png"
 
 [input]
 
@@ -69,4 +69,4 @@ action_place={
 
 [rendering]
 
-environment/default_environment="res://default_env.tres"
+environment/default_environment="res://assets/default_env.tres"

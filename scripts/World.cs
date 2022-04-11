@@ -12,7 +12,7 @@ public class World : Spatial
 
 	public override void _Ready()
 	{
-		var texture = GD.Load<Texture>("Resources/terrain.png");
+		var texture = GD.Load<Texture>("assets/terrain.png");
 		texture.Flags = (int)Texture.FlagsEnum.ConvertToLinear;
 
 		var material = new SpatialMaterial {
