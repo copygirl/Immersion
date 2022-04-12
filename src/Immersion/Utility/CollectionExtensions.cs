@@ -87,14 +87,10 @@ namespace Immersion.Utility
 
 	public class ReverseComparer<T> : IComparer<T>
 	{
+		public static readonly ReverseComparer<T> Default = new(Comparer<T>.Default);
+
 		private readonly IComparer<T> _original;
-
-		public ReverseComparer(IComparer<T> comparer)
-			=> _original = comparer;
-		public ReverseComparer()
-			: this(Comparer<T>.Default) {  }
-
-		public int Compare(T x, T y)
-			=> -_original.Compare(x, y);
+		public ReverseComparer(IComparer<T> comparer) => _original = comparer;
+		public int Compare(T x, T y) => _original.Compare(y, x);
 	}
 }

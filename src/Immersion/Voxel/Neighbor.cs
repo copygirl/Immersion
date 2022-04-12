@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Immutable;
 using System.Text;
 using Godot;
-using Immersion.Utility;
 using Immersion.Voxel.Blocks;
 using Axis = Godot.Vector3.Axis;
 
@@ -51,33 +51,36 @@ namespace Immersion.Voxel
 
 	public static class Neighbors
 	{
-		public static readonly ImmutableSet<Neighbor> HORIZONTALS =
-			new(Neighbor.East , Neighbor.West ,
-			    Neighbor.South, Neighbor.North);
+		public static readonly IImmutableSet<Neighbor> HORIZONTALS =
+			ImmutableHashSet.Create(Neighbor.East , Neighbor.West ,
+			                        Neighbor.South, Neighbor.North);
 
-		public static readonly ImmutableSet<Neighbor> VERTICALS =
-			new(Neighbor.Up, Neighbor.Down);
+		public static readonly IImmutableSet<Neighbor> VERTICALS =
+			ImmutableHashSet.Create(Neighbor.Up, Neighbor.Down);
 
-		public static readonly ImmutableSet<Neighbor> FACINGS =
-			new(HORIZONTALS, VERTICALS);
+		public static readonly IImmutableSet<Neighbor> FACINGS =
+			HORIZONTALS.Union(VERTICALS);
 
-		public static readonly ImmutableSet<Neighbor> CARDINALS =
-			new(HORIZONTALS, Neighbor.SouthEast, Neighbor.SouthWest,
-			                 Neighbor.NorthEast, Neighbor.NorthWest);
+		public static readonly IImmutableSet<Neighbor> CARDINALS =
+			HORIZONTALS.Union(new[]{
+				Neighbor.SouthEast, Neighbor.SouthWest ,
+				Neighbor.NorthEast, Neighbor.NorthWest });
 
-		public static readonly ImmutableSet<Neighbor> ALL_AXIS_PLANES =
-			new(FACINGS, Neighbor.SouthEast, Neighbor.SouthWest,
-			             Neighbor.NorthEast, Neighbor.NorthWest,
-			             Neighbor.UpEast   , Neighbor.UpWest   ,
-			             Neighbor.UpSouth  , Neighbor.UpNorth  ,
-			             Neighbor.DownEast , Neighbor.DownWest ,
-			             Neighbor.DownSouth, Neighbor.DownNorth);
+		public static readonly IImmutableSet<Neighbor> ALL_AXIS_PLANES =
+			FACINGS.Union(new[]{
+				Neighbor.SouthEast, Neighbor.SouthWest,
+				Neighbor.NorthEast, Neighbor.NorthWest,
+				Neighbor.UpEast   , Neighbor.UpWest   ,
+				Neighbor.UpSouth  , Neighbor.UpNorth  ,
+				Neighbor.DownEast , Neighbor.DownWest ,
+				Neighbor.DownSouth, Neighbor.DownNorth });
 
-		public static readonly ImmutableSet<Neighbor> ALL =
-			new(ALL_AXIS_PLANES, Neighbor.UpSouthEast, Neighbor.UpSouthWest,
-			                     Neighbor.UpNorthEast, Neighbor.UpNorthWest,
-			                     Neighbor.DownSouthEast, Neighbor.DownSouthWest,
-			                     Neighbor.DownNorthEast, Neighbor.DownNorthWest);
+		public static readonly IImmutableSet<Neighbor> ALL =
+			ALL_AXIS_PLANES.Union(new[]{
+				Neighbor.UpSouthEast  , Neighbor.UpSouthWest  ,
+				Neighbor.UpNorthEast  , Neighbor.UpNorthWest  ,
+				Neighbor.DownSouthEast, Neighbor.DownSouthWest,
+				Neighbor.DownNorthEast, Neighbor.DownNorthWest });
 	}
 
 	public static class NeighborExtensions

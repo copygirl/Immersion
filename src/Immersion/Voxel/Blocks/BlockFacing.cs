@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Immutable;
 using Godot;
-using Immersion.Utility;
 
 namespace Immersion.Voxel.Blocks
 {
@@ -16,15 +16,15 @@ namespace Immersion.Voxel.Blocks
 
 	public static class BlockFacings
 	{
-		public static readonly ImmutableSet<BlockFacing> HORIZONTALS =
-			new(BlockFacing.East , BlockFacing.West ,
-			    BlockFacing.South, BlockFacing.North);
+		public static readonly IImmutableSet<BlockFacing> HORIZONTALS =
+			ImmutableHashSet.Create(BlockFacing.East , BlockFacing.West ,
+			                        BlockFacing.South, BlockFacing.North);
 
-		public static readonly ImmutableSet<BlockFacing> VERTICALS =
-			new(BlockFacing.Up, BlockFacing.Down);
+		public static readonly IImmutableSet<BlockFacing> VERTICALS =
+			ImmutableHashSet.Create(BlockFacing.Up, BlockFacing.Down);
 
-		public static readonly ImmutableSet<BlockFacing> ALL =
-			new(HORIZONTALS, VERTICALS);
+		public static readonly IImmutableSet<BlockFacing> ALL =
+			HORIZONTALS.Union(VERTICALS);
 	}
 
 	public static class BlockFacingExtensions

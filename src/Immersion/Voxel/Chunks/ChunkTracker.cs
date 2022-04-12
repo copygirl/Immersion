@@ -10,7 +10,7 @@ namespace Immersion.Voxel.Chunks
 	{
 		private readonly Dictionary<Spatial, TrackedSpatialData> _spatials = new();
 		private readonly Dictionary<ChunkPos, TrackedChunkData> _chunks = new();
-		private readonly SortedDictionary<int, HashSet<ChunkPos>> _toSimulate = new(new ReverseComparer<int>());
+		private readonly SortedDictionary<int, HashSet<ChunkPos>> _toSimulate = new(ReverseComparer<int>.Default);
 
 		public event Action<ChunkPos>? OnChunkLostTracking;
 
