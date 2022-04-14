@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Immersion.Voxel.Blocks;
-using Immersion.Voxel.Chunks;
 
 namespace Immersion.Voxel.WorldGen
 {
@@ -22,7 +21,7 @@ namespace Immersion.Voxel.WorldGen
 			(Neighbor.Up, BasicWorldGenerator.IDENTIFIER)
 		};
 
-		public void Populate(World world, IChunk chunk)
+		public void Populate(World world, Chunk chunk)
 		{
 			var up = chunk.Neighbors[Neighbor.Up]!;
 			for (var lx = 0; lx < 16; lx++)

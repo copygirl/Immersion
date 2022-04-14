@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Immersion.Voxel.Blocks;
-using Immersion.Voxel.Chunks;
 
 namespace Immersion.Voxel.WorldGen
 {
@@ -26,7 +25,7 @@ namespace Immersion.Voxel.WorldGen
 		public IEnumerable<(Neighbor, string)> NeighborDependencies
 			=> Enumerable.Empty<(Neighbor, string)>();
 
-		public void Populate(World world, IChunk chunk)
+		public void Populate(World world, Chunk chunk)
 		{
 			for (var lx = 0; lx < 16; lx++)
 			for (var ly = 0; ly < 16; ly++)

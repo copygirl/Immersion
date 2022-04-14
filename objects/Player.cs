@@ -36,7 +36,7 @@ public class Player : KinematicBody
 
 	public override void _Ready()
 	{
-		_world    = GetNode<World>("../World");
+		_world    = GetParent<World>() ?? throw new Exception();
 		_rotation = GetNode<Spatial>("Rotation");
 		_camera   = GetNode<Camera>("Rotation/Camera");
 		Input.SetMouseMode(Input.MouseMode.Captured);
@@ -60,7 +60,7 @@ public class Player : KinematicBody
 		var normal = (Vector3)result["normal"];
 		var block  = (pos + normal * (placing ? 0.5F : -0.5F)).ToBlockPos();
 
-		var chunk     = _world.Chunks[block.ToChunkPos()]!;
+		var chunk     = _world.Chunks.GetOrNull(block.ToChunkPos())!;
 		var (x, y, z) = block.ToChunkRelative();
 		chunk.Storage[x, y, z] = breaking ? Block.AIR : Block.STONE;
 		_world.Chunks.ForceUpdate(chunk);
@@ -69,7 +69,7 @@ public class Player : KinematicBody
 			var neighborChunkPos = (block + facing).ToChunkPos();
 			if (neighborChunkPos == chunk.Position) continue;
 
-			var neighborChunk = _world.Chunks[neighborChunkPos];
+			var neighborChunk = _world.Chunks.GetOrNull(neighborChunkPos);
 			if (neighborChunk != null)
 				_world.Chunks.ForceUpdate(neighborChunk);
 		}

@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://objects/components/Tracking.cs" type="Script" id=1]
+
+[sub_resource type="SphereShape" id=1]
+radius = 64.0
+
+[sub_resource type="SphereShape" id=2]
+radius = 96.0
+
+[node name="Tracking" type="Spatial"]
+script = ExtResource( 1 )
+
+[node name="TrackingStart" type="Area" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape" type="CollisionShape" parent="TrackingStart"]
+shape = SubResource( 1 )
+
+[node name="TrackingStop" type="Area" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape" type="CollisionShape" parent="TrackingStop"]
+shape = SubResource( 2 )
+
+[connection signal="tree_exited" from="." to="." method="OnTreeExited"]
+[connection signal="area_entered" from="TrackingStart" to="." method="OnEntered"]
+[connection signal="area_exited" from="TrackingStop" to="." method="OnExited"]

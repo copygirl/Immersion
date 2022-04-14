@@ -67,6 +67,14 @@ action_place={
  ]
 }
 
+[layer_names]
+
+3d_physics/layer_2="Tracking"
+3d_physics/layer_3="World"
+3d_physics/layer_4="Players"
+3d_physics/layer_5="Entities"
+3d_physics/layer_6="Items"
+
 [rendering]
 
 environment/default_environment="res://assets/default_env.tres"

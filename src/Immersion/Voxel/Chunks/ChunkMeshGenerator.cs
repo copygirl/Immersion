@@ -14,7 +14,7 @@ namespace Immersion.Voxel.Chunks
 		public ChunkMeshGenerator(Material material, TextureAtlas<string> atlas)
 			=> (Material, TextureAtlas) = (material, atlas);
 
-		public ArrayMesh? Generate(IChunk chunk)
+		public ArrayMesh? Generate(Chunk chunk)
 		{
 			_surface.Begin(Mesh.PrimitiveType.Triangles);
 			_surface.SetMaterial(Material);

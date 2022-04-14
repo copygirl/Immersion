@@ -1,12 +1,12 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
-[ext_resource path="res://scripts/World.cs" type="Script" id=1]
-[ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://objects/World.cs" type="Script" id=1]
+[ext_resource path="res://objects/Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://assets/terrain.png" type="Texture" id=3]
 
-[node name="Spatial" type="Spatial"]
-
-[node name="World" type="Spatial" parent="."]
+[node name="World" type="Spatial"]
 script = ExtResource( 1 )
+TerrainTexture = ExtResource( 3 )
 
 [node name="Player" parent="." instance=ExtResource( 2 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 64, 0 )

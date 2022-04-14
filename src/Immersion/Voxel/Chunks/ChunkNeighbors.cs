@@ -6,19 +6,19 @@ namespace Immersion.Voxel.Chunks
 	{
 		private static readonly int CENTER_INDEX = GetIndex(0, 0, 0);
 
-		private readonly IChunk?[] _chunks
-			= new IChunk?[3 * 3 * 3];
+		private readonly Chunk?[] _chunks
+			= new Chunk?[3 * 3 * 3];
 
-		public IChunk? this[int x, int y, int z] {
+		public Chunk? this[int x, int y, int z] {
 			get => _chunks[GetIndex(x, y, z)];
 			set => _chunks[GetIndex(x, y, z)] = value;
 		}
-		public IChunk? this[Neighbor neighbor] {
+		public Chunk? this[Neighbor neighbor] {
 			get => _chunks[GetIndex(neighbor)];
 			set => _chunks[GetIndex(neighbor)] = value;
 		}
 
-		public ChunkNeighbors(IChunk center)
+		public ChunkNeighbors(Chunk center)
 			=> this[0, 0, 0] = center;
 
 		internal void Clear()

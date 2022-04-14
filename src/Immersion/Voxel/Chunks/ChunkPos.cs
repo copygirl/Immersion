@@ -21,7 +21,7 @@ namespace Immersion.Voxel.Chunks
 
 
 		public Vector3 GetOrigin() => new(X << 4, Y << 4, Z << 4);
-		public Vector3 GetCenter() => new((X << 4) + 0.5F, (Y << 4) + 0.5F, (Z << 4) + 0.5F);
+		public Vector3 GetCenter() => new((X << 4) + 8.0F, (Y << 4) + 8.0F, (Z << 4) + 8.0F);
 
 
 		public ChunkPos Add(int x, int y, int z) => new(X + x, Y + y, Z + z);

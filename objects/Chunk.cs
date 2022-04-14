@@ -4,8 +4,7 @@ using Immersion.Voxel;
 using Immersion.Voxel.Blocks;
 using Immersion.Voxel.Chunks;
 
-public class Chunk
-	: Spatial, IChunk
+public class Chunk : Spatial
 {
 	public World World { get; }
 	public ChunkPos Position { get; }
@@ -19,5 +18,14 @@ public class Chunk
 		Position  = pos;
 		Transform = new(Basis.Identity, pos.GetOrigin());
 		Neighbors = new(this);
+	}
+
+	public override void _Ready()
+	{
+		AddChild(new Trackable {
+			Translation = new(8.0F, 8.0F, 8.0F),
+			TrackAutomatically = false,
+			Shape = new BoxShape { Extents = new(8.5F, 8.5F, 8.5F) },
+		});
 	}
 }

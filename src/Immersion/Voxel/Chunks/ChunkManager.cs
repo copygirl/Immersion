@@ -1,24 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Godot;
 using Immersion.Utility;
 using Immersion.Voxel.WorldGen;
-using Thread = System.Threading.Thread;
 
 namespace Immersion.Voxel.Chunks
 {
-	public class ChunkManager
+	public class ChunkManager : Node
 	{
-		private readonly Dictionary<ChunkPos, ChunkData> _chunks = new();
+		private const int CHUNK_RENDER_DISTANCE = 4;
 
-		private readonly Material _material;
-		private readonly TextureAtlas<string> _textureAtlas;
-		private readonly Thread _workerThread;
+		private const float MAX_DISTANCE_SQUARED =
+			(CHUNK_RENDER_DISTANCE + 0.5F) * 16 *
+			(CHUNK_RENDER_DISTANCE + 0.5F) * 16;
+
+
+		private readonly Dictionary<ChunkPos, Chunk> _chunks = new();
+		private readonly ChunkedOctree<ChunkState> _octree = new(5);
+
+		private readonly ChunkMeshGenerator _meshGen;
+		private readonly ChunkShapeGenerator _shapeGen = new();
 
 		public World World { get; }
-		public ChunkTracker Tracker { get; }
 
 		public IEnumerable<IWorldGenerator> Generators { get; }
 			= new IWorldGenerator[]{
@@ -26,44 +30,31 @@ namespace Immersion.Voxel.Chunks
 				new SurfaceGrassGenerator(),
 			};
 
-		public IChunk? this[ChunkPos pos] { get {
-			lock (_chunks) return _chunks.GetOrNull(pos)?.Chunk;
-		} }
-
 
 		public ChunkManager(World world, Material material,
 		                    TextureAtlas<string> textureAtlas)
 		{
-			World         = world;
-			_material     = material;
-			_textureAtlas = textureAtlas;
-
-			Tracker = new();
-			Tracker.OnChunkLostTracking += (pos) => TryRemove(pos);
-
-			_workerThread = new(Work);
-			_workerThread.Start();
+			World    = world;
+			_meshGen = new(material, textureAtlas);
 		}
 
-
-		public IChunk GetOrCreate(ChunkPos pos)
-			=> GetOrCreateInternal(pos).Chunk;
-		private ChunkData GetOrCreateInternal(ChunkPos pos)
+		public Chunk? GetOrNull(ChunkPos pos)
+			=> _chunks.GetOrNull(pos);
+		public Chunk GetOrCreate(ChunkPos pos)
 		{
-			lock (_chunks) {
-				if (_chunks.TryGetValue(pos, out var data)) return data;
+			if (_chunks.TryGetValue(pos, out var chunk)) return chunk;
 
-				var chunk = new Chunk(World, pos);
-				IChunk? neighborChunk;
-				foreach (var neighbor in Neighbors.ALL)
-				if ((neighborChunk = this[chunk.Position + neighbor]) != null) {
-					chunk.Neighbors[neighbor] = neighborChunk;
-					neighborChunk.Neighbors[neighbor.GetOpposite()] = chunk;
-				}
-
-				_chunks.Add(chunk.Position, data = new(chunk));
-				return data;
+			chunk = new Chunk(World, pos);
+			Chunk? neighborChunk;
+			foreach (var neighbor in Neighbors.ALL)
+			if ((neighborChunk = GetOrNull(chunk.Position + neighbor)) != null) {
+				chunk.Neighbors[neighbor] = neighborChunk;
+				neighborChunk.Neighbors[neighbor.GetOpposite()] = chunk;
 			}
+
+			_chunks.Add(chunk.Position, chunk);
+			World.AddChild(chunk);
+			return chunk;
 		}
 
 		public void Remove(ChunkPos pos)
@@ -74,161 +65,142 @@ namespace Immersion.Voxel.Chunks
 		}
 		public bool TryRemove(ChunkPos pos)
 		{
-			lock (_chunks) {
-				if (!_chunks.TryGetValue(pos, out var data)) return false;
+			if (!_chunks.TryGetValue(pos, out var chunk)) return false;
 
-				data.Chunk.Neighbors.Clear();
-				IChunk? neighborChunk;
-				foreach (var neighbor in Neighbors.ALL)
-				if ((neighborChunk = this[data.Chunk.Position - neighbor]) != null)
-					neighborChunk.Neighbors[neighbor] = null;
+			chunk.Neighbors.Clear();
+			Chunk? neighborChunk;
+			foreach (var neighbor in Neighbors.ALL)
+			if ((neighborChunk = GetOrNull(chunk.Position - neighbor)) != null)
+				neighborChunk.Neighbors[neighbor] = null;
 
-				_chunks.Remove(pos);
-				if (data.IsFinished) World.ScheduleTask(() =>
-					World.RemoveChild((Chunk)data.Chunk));
-				return true;
-			}
+			_chunks.Remove(pos);
+			World.RemoveChild(chunk);
+			return true;
 		}
 
 
-		public void ForceUpdate(IChunk chunk)
+		public void ForceUpdate(Chunk chunk)
 		{
-			var meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
-			var shapeGen = new ChunkShapeGenerator();
-
-			Mesh?  mesh  = meshGen.Generate(chunk);
-			Shape? shape = shapeGen.Generate(chunk);
-
+			var mesh  = _meshGen.Generate(chunk);
+			var shape = _shapeGen.Generate(chunk);
 			SetChunkMeshAndShape(chunk, mesh, shape);
 		}
 
-		private void SetChunkMeshAndShape(IChunk chunk, Mesh? mesh, Shape? shape)
+		private void SetChunkMeshAndShape(Chunk chunk, Mesh? mesh, Shape? shape)
 		{
-			var godotChunk = (Chunk)chunk;
-			var hasMesh = godotChunk.HasNode("MeshInstance");
-			var hasBody = godotChunk.HasNode("StaticBody");
-			var meshNode  = hasMesh ? godotChunk.GetNode<MeshInstance>("MeshInstance") : null;
-			var bodyNode  = hasBody ? godotChunk.GetNode<StaticBody>("StaticBody") : null;
+			var hasMesh = chunk.HasNode("MeshInstance");
+			var hasBody = chunk.HasNode("StaticBody");
+			var meshNode  = hasMesh ? chunk.GetNode<MeshInstance>("MeshInstance") : null;
+			var bodyNode  = hasBody ? chunk.GetNode<StaticBody>("StaticBody") : null;
 			var shapeNode = bodyNode?.GetNode<CollisionShape>("CollisionShape");
 
 			if (mesh != null) {
-				if (!hasMesh) meshNode = new MeshInstance();
+				if (!hasMesh) meshNode = new();
 				meshNode!.Mesh = mesh;
-				if (!hasMesh) godotChunk.AddChild(meshNode, true);
-			} else if (meshNode != null) godotChunk.RemoveChild(meshNode);
+				if (!hasMesh)
+					chunk.AddChild(meshNode, true);
+			} else if (meshNode != null)
+				chunk.RemoveChild(meshNode);
 
 			if (shape != null) {
 				if (!hasBody) {
-					bodyNode  = new StaticBody();
-					shapeNode = new CollisionShape();
+					bodyNode = new(){
+						CollisionLayer = (uint)CollisionLayers.World,
+						CollisionMask  = 0,
+					};
+					shapeNode = new();
 					bodyNode.AddChild(shapeNode, true);
 				}
 				shapeNode!.Shape = shape;
-				if (!hasBody) godotChunk.AddChild(bodyNode, true);
-			} else if (bodyNode != null) godotChunk.RemoveChild(bodyNode);
+				if (!hasBody)
+					chunk.AddChild(bodyNode, true);
+			} else if (bodyNode != null)
+				chunk.RemoveChild(bodyNode);
+
+			_octree.Update(chunk.Position,
+				(ref ChunkState state) => state |= ChunkState.MeshUpdatedAll,
+				(int level, ReadOnlySpan<ChunkState> children, ref ChunkState parent) => {
+					var mask = ChunkState.MeshUpdatedAll;
+					foreach (var childState in children)
+						if ((childState & ChunkState.MeshUpdatedAll) != ChunkState.MeshUpdatedAll)
+							{ mask = ChunkState.MeshUpdatedSome; break; }
+					if ((parent & mask) == mask) return false;
+					else { parent &= mask; return true; }
+				});
 		}
 
-
-		private void Work()
+		public override void _Process(float delta)
 		{
-			const int MAX_TASKS = 24;
-			var working = new Dictionary<ChunkPos, Task<object>>();
-			var generatorLookup = Generators.ToDictionary(gen => gen.Identifier);
+			var player       = GetNode<Player>("/root/World/Player");
+			var (px, py, pz) = player.GlobalTransform.origin;
 
-			var meshShapeGenerators = new Stack<(ChunkMeshGenerator, ChunkShapeGenerator)>();
+			var toProcess = _octree.Find(
+				(level, pos, state) => {
+					if ((state & (ChunkState.GeneratedAll | ChunkState.MeshUpdatedAll))
+						== (ChunkState.GeneratedAll | ChunkState.MeshUpdatedAll))
+							return null;
 
-			while (true) {
-				Tracker.Update();
+					var (minX, minY, minZ) = pos << level << 4;
+					var maxX = minX + (1 << 4 << level);
+					var maxY = minY + (1 << 4 << level);
+					var maxZ = minZ + (1 << 4 << level);
 
-				var finishedWork = working.Where(kvp => kvp.Value.IsCompleted).ToArray();
-				foreach (var (pos, task) in finishedWork) {
-					working.Remove(pos);
-					switch (task.Result) {
-						case IWorldGenerator generator:
-							this[pos]!.AppliedGenerators.Add(generator.Identifier);
-							break;
-						case ValueTuple<Mesh?, Shape?, (ChunkMeshGenerator, ChunkShapeGenerator)> tuple:
-							var (mesh, shape, meshShapeGen) = tuple;
-							meshShapeGenerators.Push(meshShapeGen);
-							Tracker.MarkChunkReady(pos);
+					var dx = (px < minX) ? minX - px : (px > maxX) ? maxX - px : 0.0F;
+					var dy = (py < minY) ? minY - py : (py > maxY) ? maxY - py : 0.0F;
+					var dz = (pz < minZ) ? minZ - pz : (pz > maxZ) ? maxZ - pz : 0.0F;
+					return dx * dx + dy * dy + dz * dz;
+				},
+				player.GlobalTransform.origin.ToChunkPos());
 
-							var chunk = (Chunk)this[pos]!;
-							SetChunkMeshAndShape(chunk, mesh, shape);
+			var numToProcess = 4;
+			foreach (var (chunkPos, state, distanceSqr) in toProcess) {
+				if (distanceSqr > MAX_DISTANCE_SQUARED) break;
 
-							World.ScheduleTask(() =>
-								World.AddChild(chunk));
-							break;
+				var chunk = GetOrCreate(chunkPos);
+
+				if ((state & ChunkState.GeneratedAll) != ChunkState.GeneratedAll) {
+
+					var generator = Generators
+						.Where(g => !chunk.AppliedGenerators.Contains(g.Identifier))
+						.FirstOrNull();
+
+					if (generator == null) {
+						_octree.Update(chunkPos,
+							(ref ChunkState state) => state |= ChunkState.GeneratedAll,
+							(int level, ReadOnlySpan<ChunkState> children, ref ChunkState parent) => {
+								var mask = ChunkState.GeneratedAll;
+								foreach (var childState in children)
+									if ((childState & ChunkState.GeneratedAll) != ChunkState.GeneratedAll)
+										{ mask = ChunkState.GeneratedSome; break; }
+								if ((parent & mask) == mask) return false;
+								else { parent &= mask; return true; }
+							});
+						continue;
 					}
+
+					if (!generator.NeighborDependencies.All(
+						dep => GetOrNull(chunkPos + dep.Neighbor)
+							?.AppliedGenerators.Contains(dep.Generator) == true))
+						continue;
+
+					generator.Populate(World, chunk);
+					chunk.AppliedGenerators.Add(generator.Identifier);
+
+					if (numToProcess-- == 0) break;
+
+				} else if ((state & ChunkState.MeshUpdatedAll) != ChunkState.MeshUpdatedAll) {
+
+					var neighbors = Neighbors.ALL.Select(n => chunkPos + n);
+					if (!neighbors.All(pos => (_octree.Get(pos) & ChunkState.GeneratedAll) == ChunkState.GeneratedAll))
+						continue;
+
+					var mesh  = _meshGen.Generate(chunk);
+					var shape = _shapeGen.Generate(chunk);
+					SetChunkMeshAndShape(chunk, mesh, shape);
+
+					if (numToProcess-- == 0) break;
 				}
-
-				foreach (var pos in Tracker.SimulationRequestedChunks) {
-					if (working.Count >= MAX_TASKS) break;
-					if (working.ContainsKey(pos)) continue;
-					var data  = GetOrCreateInternal(pos);
-					var chunk = data.Chunk;
-
-					if (!data.IsGenerated) {
-
-						var nextGenerator = Generators
-							.Where(gen => !chunk.AppliedGenerators.Contains(gen.Identifier))
-							.FirstOrNull();
-
-						if (nextGenerator == null) {
-							data.IsGenerated = true;
-							continue;
-						}
-
-						if (!nextGenerator.NeighborDependencies
-							.All(((Neighbor neighbor, string dep) t)
-								=> !working.ContainsKey(pos + t.neighbor)
-								&& (this[pos + t.neighbor]?.AppliedGenerators.Contains(t.dep) == true)))
-							continue;
-
-						var task = Task.Run<object>(() => {
-							nextGenerator.Populate(World, chunk);
-							return nextGenerator;
-						});
-						working.Add(pos, task);
-
-						// This is silly but it's an acceptable workaround for now.
-						var neighborTask = task.ContinueWith<object>(task => "neighbor");
-						foreach (var (neighbor, _) in nextGenerator.NeighborDependencies)
-							working.Add(pos + neighbor, neighborTask);
-
-					} else if (!data.IsFinished) {
-						ChunkMeshGenerator meshGen;
-						ChunkShapeGenerator shapeGen;
-
-						if (meshShapeGenerators.Count == 0) {
-							meshGen  = new ChunkMeshGenerator(_material, _textureAtlas);
-							shapeGen = new ChunkShapeGenerator();
-						} else (meshGen, shapeGen) = meshShapeGenerators.Pop();
-
-						lock (_chunks)
-						if (Neighbors.ALL.All(n => _chunks.GetOrNull(pos + n)?.IsGenerated == true)) {
-							working.Add(pos, Task.Run<object>(() => {
-								Mesh?  mesh  = meshGen.Generate(chunk);
-								Shape? shape = shapeGen.Generate(chunk);
-								data.IsFinished = true;
-								return (mesh, shape, (meshGen, shapeGen));
-							}));
-						}
-					}
-				}
-
-				Thread.Sleep(0);
 			}
-		}
-
-
-		private class ChunkData
-		{
-			public IChunk Chunk { get; }
-			public bool IsGenerated { get; set; }
-			public bool IsFinished { get; set; }
-
-			public ChunkData(Chunk chunk)
-				=> Chunk = chunk;
 		}
 	}
 }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Immersion.Voxel.Chunks;
 
 namespace Immersion.Voxel.WorldGen
 {
@@ -9,8 +8,8 @@ namespace Immersion.Voxel.WorldGen
 
 		IEnumerable<string> Dependencies { get; }
 
-		IEnumerable<(Neighbor, string)> NeighborDependencies { get; }
+		IEnumerable<(Neighbor Neighbor, string Generator)> NeighborDependencies { get; }
 
-		void Populate(World world, IChunk chunk);
+		void Populate(World world, Chunk chunk);
 	}
 }
