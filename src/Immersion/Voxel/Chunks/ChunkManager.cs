@@ -136,9 +136,8 @@ namespace Immersion.Voxel.Chunks
 
 			var toProcess = _octree.Find(
 				(level, pos, state) => {
-					if ((state & (ChunkState.GeneratedAll | ChunkState.MeshUpdatedAll))
-						== (ChunkState.GeneratedAll | ChunkState.MeshUpdatedAll))
-							return null;
+					const ChunkState MASK_DONE = ChunkState.GeneratedAll | ChunkState.MeshUpdatedAll;
+					if ((state & MASK_DONE) == MASK_DONE) return null;
 
 					var (minX, minY, minZ) = pos << level << 4;
 					var maxX = minX + (1 << 4 << level);
