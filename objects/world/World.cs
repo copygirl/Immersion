@@ -27,7 +27,6 @@ public class World : Spatial
 	public override void _EnterTree()
 	{
 		Chunks = GetNode<ChunkManager>("ChunkManager") ?? throw new InvalidOperationException();
-		// Chunks.ChunkReady += chunk => GD.Print("Chunk ready: ", chunk.ChunkPos);
 
 		TerrainTexture.Flags = (int)Texture.FlagsEnum.ConvertToLinear;
 

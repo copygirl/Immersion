@@ -69,11 +69,8 @@ public class ChunkMeshUpdater : Node
 		var meshGen = new ChunkMeshGenerator(GetParent<World>());
 
 		while (true) {
-			while (_markToUpdate.TryTake(out var chunkPos)) {
-				GD.Print(chunkPos);
-				octree.Update(chunkPos,
-					(int level, ReadOnlySpan<bool> children, ref bool parent) => parent = true);
-			}
+			while (_markToUpdate.TryTake(out var chunkPos)) octree.Update(chunkPos,
+				(int level, ReadOnlySpan<bool> children, ref bool parent) => parent = true);
 
 			var (px, py, pz) = _cameraPosition;
 			// TODO: Re-use the enumerator if position is still (roughly) the same octree wasn't modified.
