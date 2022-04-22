@@ -5,31 +5,17 @@ using Immersion.Utility;
 
 namespace Immersion.Voxel.Chunks
 {
-	[Flags]
-	public enum ChunkState : byte
-	{
-		ExistsSome      = 0b00000001,
-		ExistsAll       = 0b00000011,
-		TrackedSome     = 0b00000100,
-		TrackedAll      = 0b00001100,
-		GeneratedSome   = 0b00010000,
-		GeneratedAll    = 0b00110000,
-		MeshUpdatedSome = 0b01000000,
-		MeshUpdatedAll  = 0b11000000,
-	}
-
 	public class ChunkedOctree<T>
 		where T : struct
 	{
-		public delegate void UpdateAction(ref T value);
-		public delegate bool BubbleFunc(int level, ReadOnlySpan<T> children, ref T parent);
-
+		public delegate void UpdateAction(int level, ReadOnlySpan<T> children, ref T parent);
 		public delegate float? WeightFunc(int level, ZOrder pos, T value);
 
 		private static readonly int[] START_INDEX_LOOKUP = {
 			0, 1, 9, 73, 585, 4681, 37449, 299593, 2396745, 19173961, 153391689 };
 
 
+		private readonly IEqualityComparer<T> _comparer = EqualityComparer<T>.Default;
 		private readonly Dictionary<ZOrder, T[]> _regions = new();
 
 		public int Depth { get; }
@@ -43,45 +29,42 @@ namespace Immersion.Voxel.Chunks
 			Depth = depth;
 		}
 
-		public T Get(ChunkPos pos) => Get(0, new(pos.X, pos.Y, pos.Z));
+		public T Get(ChunkPos pos)
+			=> Get(0, new(pos.X, pos.Y, pos.Z));
 		public T Get(int level, ZOrder pos)
 		{
-			var region = _regions.GetOrNull(pos >> Depth);
+			var region = _regions.GetOrNull(pos >> (Depth - level));
 			if (region == null) return default;
-
-			var baseIndex  = START_INDEX_LOOKUP[Depth - level];
-			var localIndex = (long)pos & ~(~0 << (Depth * 3));
-			return region[baseIndex + localIndex];
+			var localPos = pos & ~(~0L << ((Depth - level) * 3));
+			return region[GetIndex(level, localPos)];
 		}
+		private int GetIndex(int level, ZOrder localPos)
+			=> START_INDEX_LOOKUP[Depth - level] + (int)localPos.Raw;
 
-		public void Update(ChunkPos pos, UpdateAction update, BubbleFunc bubble)
+		public void Update(ChunkPos pos, UpdateAction update)
 		{
 			var zPos      = new ZOrder(pos.X, pos.Y, pos.Z);
+			var localPos  = zPos & ~(~0L << (Depth * 3));
 			var regionPos = zPos >> Depth;
-			var localPos  = (ZOrder)((long)zPos & ~(~0 << (Depth * 3)));
 
 			var region = _regions.GetOrAdd(regionPos,
 				() => new T[START_INDEX_LOOKUP[Depth + 1] + 1]);
 
-			var index = START_INDEX_LOOKUP[Depth] + (long)localPos;
-			update(ref region[index]);
+			var children = default(ReadOnlySpan<T>);
+			for (var level = 0; level <= Depth; level++) {
+				var index = GetIndex(level, localPos);
 
-			for (var level = 1; level <= Depth; level++) {
-				var childrenBegin = START_INDEX_LOOKUP[Depth - (level - 1)];
-				var childrenIndex = childrenBegin + (int)((long)localPos & ~0b111);
+				var previous = region[index];
+				update(0, children, ref region[index]);
+				if (_comparer.Equals(region[index], previous)) return;
 
+				if (level == Depth) return;
+				children = region.AsSpan(GetIndex(level, localPos & ~0b111L), 8);
 				localPos >>= 1;
-				var parentBegin = START_INDEX_LOOKUP[Depth - level];
-				var parentIndex = parentBegin + (int)(long)localPos;
-
-				var children   = region.AsSpan(childrenIndex, 8);
-				ref var parent = ref region[parentIndex];
-
-				if (!bubble(level, children, ref parent)) break;
 			}
 		}
 
-		public IEnumerable<(ChunkPos, T, float)> Find(
+		public IEnumerable<(ChunkPos ChunkPos, T Value, float Weight)> Find(
 			WeightFunc weight, params ChunkPos[] searchFrom)
 		{
 			var enumerator = new Enumerator(this, weight);
@@ -89,18 +72,20 @@ namespace Immersion.Voxel.Chunks
 			while (enumerator.MoveNext()) yield return enumerator.Current;
 		}
 
-		public struct Enumerator : IEnumerator<(ChunkPos, T, float)>
+		public class Enumerator : IEnumerator<(ChunkPos ChunkPos, T Value, float Weight)>
 		{
 			private readonly ChunkedOctree<T> _octree;
 			private readonly WeightFunc _weight;
 
 			private readonly HashSet<ZOrder> _checkedRegions = new();
 			private readonly PriorityQueue<(int Level, ZOrder Pos, T Value), float> _processing = new();
+			private (ChunkPos ChunkPos, T Value, float Weight)? _current;
 
 			internal Enumerator(ChunkedOctree<T> octree, WeightFunc weight)
-				{ _octree = octree; _weight = weight; }
+				{ _octree = octree; _weight = weight; _current = null; }
 
-			public (ChunkPos, T, float) Current { get; private set; } = default;
+			public (ChunkPos ChunkPos, T Value, float Weight) Current
+				=> _current ?? throw new InvalidOperationException();
 			object IEnumerator.Current => Current;
 
 			public bool MoveNext()
@@ -108,11 +93,12 @@ namespace Immersion.Voxel.Chunks
 				while (_processing.TryDequeue(out var element, out var weight)) {
 					var (level, nodePos, value) = element;
 					if (level == 0) {
-						Current = (new(nodePos.X, nodePos.Y, nodePos.Z), value, weight);
+						_current = (new(nodePos.X, nodePos.Y, nodePos.Z), value, weight);
 						return true;
-					} else for (var i = 0; i < 8; i++)
-						PushNode(level - 1, (nodePos << 1) | (ZOrder)i);
+					} else for (var i = 0b000; i <= 0b111; i++)
+						PushNode(level - 1, (nodePos << 1) | ZOrder.FromRaw(i));
 				}
+				_current = null;
 				return false;
 			}
 

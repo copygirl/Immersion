@@ -10,6 +10,6 @@ namespace Immersion.Voxel.WorldGen
 
 		IEnumerable<(Neighbor Neighbor, string Generator)> NeighborDependencies { get; }
 
-		void Populate(World world, Chunk chunk);
+		void Populate(Chunk chunk);
 	}
 }

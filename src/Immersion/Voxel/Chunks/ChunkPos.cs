@@ -47,8 +47,7 @@ namespace Immersion.Voxel.Chunks
 			=> (obj is ChunkPos pos) && Equals(pos);
 
 		public override int GetHashCode() => HashCode.Combine(X, Y, Z);
-		public override string ToString() => $"ChunkPos ({X}:{Y}:{Z})";
-		public string ToShortString()     => $"{X}:{Y}:{Z}";
+		public override string ToString() => $"<{X},{Y},{Z}>";
 
 
 		public static implicit operator ChunkPos((int x, int y, int z) t) => new(t.x, t.y, t.z);

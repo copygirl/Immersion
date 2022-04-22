@@ -174,7 +174,7 @@ namespace Immersion.Voxel
 			{ var (x, y, z) = self; return (-x, -y, -z).ToNeighbor(); }
 
 
-		public static BlockPos ToProperPos(this Neighbor self)
+		public static BlockPos ToBlockPos(this Neighbor self)
 			{ var (x, y, z) = self; return new BlockPos(x, y, z); }
 
 		public static Vector3 ToVector3(this Neighbor self)

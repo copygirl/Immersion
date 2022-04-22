@@ -56,8 +56,7 @@ namespace Immersion.Voxel.Blocks
 			=> (obj is BlockPos pos) && Equals(pos);
 
 		public override int GetHashCode() => HashCode.Combine(X, Y, Z);
-		public override string ToString() => $"BlockPos ({X}:{Y}:{Z})";
-		public string ToShortString()     => $"{X}:{Y}:{Z}";
+		public override string ToString() => $"<{X},{Y},{Z}>";
 
 
 		public static implicit operator BlockPos((int x, int y, int z) t) => new(t.x, t.y, t.z);

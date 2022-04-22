@@ -27,6 +27,7 @@ namespace Immersion.Utility
 		private const int BITS_PER_ELEMENT = BITS_SIZE / 3;
 		private const int MAX_USABLE_BITS  = BITS_PER_ELEMENT * 3;
 		private const int SIGN_SHIFT       = sizeof(int) * 8 - BITS_PER_ELEMENT;
+		private const long USABLE_MASK     = ~(~0L << MAX_USABLE_BITS);
 		private const long COMPARE_MASK    = ~(~0L << 3) << (MAX_USABLE_BITS - 3);
 
 		private static readonly ulong[] MASKS = {
@@ -46,78 +47,81 @@ namespace Immersion.Utility
 		private static readonly long YZ_MASK = Y_MASK | Z_MASK;
 
 
-		private readonly long _value;
+		public long Raw { get; }
 
 		public int X => Decode(0);
 		public int Y => Decode(1);
 		public int Z => Decode(2);
 
+
 		private ZOrder(long value)
-			=> _value = ClearUnusedBits(value);
+			=> Raw = value;
+
+		public static ZOrder FromRaw(long value)
+			=> new(value & USABLE_MASK);
 
 		public ZOrder(int x, int y, int z)
 		{
 			if (x < ELEMENT_MIN || x > ELEMENT_MAX) throw new ArgumentOutOfRangeException(nameof(x));
 			if (y < ELEMENT_MIN || y > ELEMENT_MAX) throw new ArgumentOutOfRangeException(nameof(y));
 			if (z < ELEMENT_MIN || z > ELEMENT_MAX) throw new ArgumentOutOfRangeException(nameof(z));
-			_value = Split(x) | Split(y) << 1 | Split(z) << 2;
+			Raw = Split(x) | Split(y) << 1 | Split(z) << 2;
 		}
 
 		public void Deconstruct(out int x, out int y, out int z)
 			=> (x, y, z) = (X, Y, Z);
 
-		public ZOrder IncX() => new((((_value | YZ_MASK) +  1      ) & X_MASK) | (_value & YZ_MASK));
-		public ZOrder IncY() => new((((_value | XZ_MASK) + (1 << 1)) & Y_MASK) | (_value & XZ_MASK));
-		public ZOrder IncZ() => new((((_value | XY_MASK) + (1 << 2)) & Z_MASK) | (_value & XY_MASK));
 
-		public ZOrder DecX() => new((((_value & X_MASK) -  1      ) & X_MASK) | (_value & YZ_MASK));
-		public ZOrder DecY() => new((((_value & Y_MASK) - (1 << 1)) & Y_MASK) | (_value & XZ_MASK));
-		public ZOrder DecZ() => new((((_value & Z_MASK) - (1 << 2)) & Z_MASK) | (_value & XY_MASK));
+		public ZOrder IncX() => FromRaw((((Raw | YZ_MASK) +  1      ) & X_MASK) | (Raw & YZ_MASK));
+		public ZOrder IncY() => FromRaw((((Raw | XZ_MASK) + (1 << 1)) & Y_MASK) | (Raw & XZ_MASK));
+		public ZOrder IncZ() => FromRaw((((Raw | XY_MASK) + (1 << 2)) & Z_MASK) | (Raw & XY_MASK));
+
+		public ZOrder DecX() => FromRaw((((Raw & X_MASK) -  1      ) & X_MASK) | (Raw & YZ_MASK));
+		public ZOrder DecY() => FromRaw((((Raw & Y_MASK) - (1 << 1)) & Y_MASK) | (Raw & XZ_MASK));
+		public ZOrder DecZ() => FromRaw((((Raw & Z_MASK) - (1 << 2)) & Z_MASK) | (Raw & XY_MASK));
 
 		public static ZOrder operator +(ZOrder left, ZOrder right)
 		{
-			var xSum = (left._value | YZ_MASK) + (right._value & X_MASK);
-			var ySum = (left._value | XZ_MASK) + (right._value & Y_MASK);
-			var zSum = (left._value | XY_MASK) + (right._value & Z_MASK);
-			return new((xSum & X_MASK) | (ySum & Y_MASK) | (zSum & Z_MASK));
+			var xSum = (left.Raw | YZ_MASK) + (right.Raw & X_MASK);
+			var ySum = (left.Raw | XZ_MASK) + (right.Raw & Y_MASK);
+			var zSum = (left.Raw | XY_MASK) + (right.Raw & Z_MASK);
+			return FromRaw((xSum & X_MASK) | (ySum & Y_MASK) | (zSum & Z_MASK));
 		}
 
 		public static ZOrder operator -(ZOrder left, ZOrder right)
 		{
-			var xDiff = (left._value & X_MASK) - (right._value & X_MASK);
-			var yDiff = (left._value & Y_MASK) - (right._value & Y_MASK);
-			var zDiff = (left._value & Z_MASK) - (right._value & Z_MASK);
-			return new((xDiff & X_MASK) | (yDiff & Y_MASK) | (zDiff & Z_MASK));
+			var xDiff = (left.Raw & X_MASK) - (right.Raw & X_MASK);
+			var yDiff = (left.Raw & Y_MASK) - (right.Raw & Y_MASK);
+			var zDiff = (left.Raw & Z_MASK) - (right.Raw & Z_MASK);
+			return FromRaw((xDiff & X_MASK) | (yDiff & Y_MASK) | (zDiff & Z_MASK));
 		}
 
-		public static ZOrder operator &(ZOrder left, ZOrder right)
-			=> new(left._value & right._value); // ClearUnusedBits unnecessary.
-		public static ZOrder operator |(ZOrder left, ZOrder right)
-			=> new(left._value | right._value); // ClearUnusedBits unnecessary.
-		public static ZOrder operator ^(ZOrder left, ZOrder right)
-			=> new(left._value ^ right._value); // ClearUnusedBits unnecessary.
+		public static ZOrder operator &(ZOrder left, long right) => FromRaw(left.Raw & right);
+		public static ZOrder operator |(ZOrder left, long right) => FromRaw(left.Raw | right);
+		public static ZOrder operator ^(ZOrder left, long right) => FromRaw(left.Raw ^ right);
+
+		public static ZOrder operator &(ZOrder left, ZOrder right) => new(left.Raw & right.Raw);
+		public static ZOrder operator |(ZOrder left, ZOrder right) => new(left.Raw | right.Raw);
+		public static ZOrder operator ^(ZOrder left, ZOrder right) => new(left.Raw ^ right.Raw);
 
 		public static ZOrder operator <<(ZOrder left, int right)
 		{
 			if (right >= BITS_PER_ELEMENT) throw new ArgumentOutOfRangeException(
 				nameof(right), right, $"{nameof(right)} must be smaller than {BITS_PER_ELEMENT}");
-			return new(left._value << (right * 3));
+			return FromRaw(left.Raw << (right * 3));
 		}
 		public static ZOrder operator >>(ZOrder left, int right)
 		{
-			var result = left._value >> (right * 3);
-			var mask   = (left._value >> (MAX_USABLE_BITS - 3)) << (MAX_USABLE_BITS - (right * 3));
+			var result = left.Raw >> (right * 3);
+			var mask   = (left.Raw >> (MAX_USABLE_BITS - 3)) << (MAX_USABLE_BITS - (right * 3));
 			for (var i = 0; i < right; i++) { result |= mask; mask <<= 3; }
-			return new(result);
+			return FromRaw(result);
 		}
 
-		public static explicit operator long(ZOrder order) => order._value;
-		public static explicit operator ZOrder(long value) => new(value);
-
-		public int CompareTo(ZOrder other) => (_value ^ COMPARE_MASK).CompareTo(other._value ^ COMPARE_MASK);
-		public bool Equals(ZOrder other) => _value.Equals(other._value);
+		public int CompareTo(ZOrder other) => (Raw ^ COMPARE_MASK).CompareTo(other.Raw ^ COMPARE_MASK);
+		public bool Equals(ZOrder other) => Raw.Equals(other.Raw);
 		public override bool Equals(object obj) => (obj is ZOrder order) && Equals(order);
-		public override int GetHashCode() => _value.GetHashCode();
+		public override int GetHashCode() => Raw.GetHashCode();
 		public override string ToString() => $"<{X},{Y},{Z}>";
 
 
@@ -135,7 +139,7 @@ namespace Immersion.Utility
 
 		private int Decode(int index)
 		{
-			var l = (ulong)_value >> index;
+			var l = (ulong)Raw >> index;
 			l &= MASKS[5];
 			l = (l ^ (l >>  2)) & MASKS[4];
 			l = (l ^ (l >>  4)) & MASKS[3];
@@ -144,8 +148,5 @@ namespace Immersion.Utility
 			l = (l ^ (l >> 32)) & MASKS[0];
 			return ((int)l << SIGN_SHIFT) >> SIGN_SHIFT;
 		}
-
-		private static long ClearUnusedBits(long value)
-			=> value & ~(~0L << MAX_USABLE_BITS);
 	}
 }

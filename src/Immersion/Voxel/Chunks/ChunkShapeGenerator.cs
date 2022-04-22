@@ -27,8 +27,8 @@ namespace Immersion.Voxel.Chunks
 			return shape;
 		}
 
-		private IBlock GetNeighborBlock(
-			ChunkNeighbors chunks, int x, int y, int z, BlockFacing facing)
+		private static IBlock GetNeighborBlock(ChunkNeighbors chunks,
+			int x, int y, int z, BlockFacing facing)
 		{
 			var cx = 0; var cy = 0; var cz = 0;
 			switch (facing) {

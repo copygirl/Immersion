@@ -25,14 +25,14 @@ namespace Immersion.Voxel.WorldGen
 		public IEnumerable<(Neighbor, string)> NeighborDependencies
 			=> Enumerable.Empty<(Neighbor, string)>();
 
-		public void Populate(World world, Chunk chunk)
+		public void Populate(Chunk chunk)
 		{
 			for (var lx = 0; lx < 16; lx++)
 			for (var ly = 0; ly < 16; ly++)
 			for (var lz = 0; lz < 16; lz++) {
-				var gx = chunk.Position.X << 4 | lx;
-				var gy = chunk.Position.Y << 4 | ly;
-				var gz = chunk.Position.Z << 4 | lz;
+				var gx = chunk.ChunkPos.X << 4 | lx;
+				var gy = chunk.ChunkPos.Y << 4 | ly;
+				var gz = chunk.ChunkPos.Z << 4 | lz;
 				var bias = Mathf.Clamp(gy / 64.0F - 0.5F, -0.25F, 1.0F);
 				if (_noise.GetNoise3d(gx, gy, gz) > bias)
 					chunk.Storage[lx, ly, lz] = Block.STONE;

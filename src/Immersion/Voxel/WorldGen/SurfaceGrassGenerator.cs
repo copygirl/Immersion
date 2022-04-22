@@ -21,7 +21,7 @@ namespace Immersion.Voxel.WorldGen
 			(Neighbor.Up, BasicWorldGenerator.IDENTIFIER)
 		};
 
-		public void Populate(World world, Chunk chunk)
+		public void Populate(Chunk chunk)
 		{
 			var up = chunk.Neighbors[Neighbor.Up]!;
 			for (var lx = 0; lx < 16; lx++)

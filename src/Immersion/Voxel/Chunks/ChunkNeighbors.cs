@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Immersion.Voxel.Chunks
 {
-	public class ChunkNeighbors
+	public class ChunkNeighbors : IEnumerable<Chunk>
 	{
 		private static readonly int CENTER_INDEX = GetIndex(0, 0, 0);
 
@@ -39,5 +41,19 @@ namespace Immersion.Voxel.Chunks
 				nameof(z), z, $"{nameof(z)} (={z}) must be within (-1, 1)");
 			return x+1 + (y+1) * 3 + (z+1) * 9;
 		}
+
+
+		// IEnumerable implementation
+
+		public IEnumerator<Chunk> GetEnumerator()
+		{
+			for (var i = 0; i < _chunks.Length; i++)
+			if (i != CENTER_INDEX)
+			if (_chunks[i] is Chunk chunk)
+				yield return chunk;
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+			=> GetEnumerator();
 	}
 }

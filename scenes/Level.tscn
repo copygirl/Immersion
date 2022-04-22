@@ -1,12 +1,29 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=8 format=2]
 
-[ext_resource path="res://objects/World.cs" type="Script" id=1]
+[ext_resource path="res://objects/world/World.cs" type="Script" id=1]
 [ext_resource path="res://objects/Player.tscn" type="PackedScene" id=2]
 [ext_resource path="res://assets/terrain.png" type="Texture" id=3]
+[ext_resource path="res://objects/world/ChunkManager.cs" type="Script" id=4]
+[ext_resource path="res://objects/world/ChunkMeshUpdater.cs" type="Script" id=5]
+[ext_resource path="res://objects/world/WorldGenManager.cs" type="Script" id=6]
+[ext_resource path="res://objects/world/ChunkShapeUpdater.cs" type="Script" id=7]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 1 )
 TerrainTexture = ExtResource( 3 )
+
+[node name="ChunkManager" type="Spatial" parent="."]
+script = ExtResource( 4 )
+
+[node name="WorldGenManager" type="Node" parent="."]
+script = ExtResource( 6 )
+
+[node name="ChunkShapeUpdater" type="Node" parent="."]
+script = ExtResource( 7 )
+
+[node name="ChunkMeshUpdater" type="Node" parent="."]
+script = ExtResource( 5 )
+_cameraPath = NodePath("../Player/Rotation/Camera")
 
 [node name="Player" parent="." instance=ExtResource( 2 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 64, 0 )

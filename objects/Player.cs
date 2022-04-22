@@ -39,7 +39,7 @@ public class Player : KinematicBody
 		_world    = GetParent<World>() ?? throw new Exception();
 		_rotation = GetNode<Spatial>("Rotation");
 		_camera   = GetNode<Camera>("Rotation/Camera");
-		Input.SetMouseMode(Input.MouseMode.Captured);
+		// Input.SetMouseMode(Input.MouseMode.Captured);
 	}
 
 	public override void _Process(float delta)
@@ -53,26 +53,26 @@ public class Player : KinematicBody
 		var startPos  = _camera.ProjectRayOrigin(mousePos);
 		var endPos    = startPos + _camera.ProjectRayNormal(mousePos) * rayLength;
 
-		var result  = GetWorld().DirectSpaceState.IntersectRay(startPos, endPos);
+		var result = GetWorld().DirectSpaceState.IntersectRay(startPos, endPos);
 		if (result.Count == 0) return;
 
 		var pos    = (Vector3)result["position"];
 		var normal = (Vector3)result["normal"];
 		var block  = (pos + normal * (placing ? 0.5F : -0.5F)).ToBlockPos();
 
-		var chunk     = _world.Chunks.GetOrNull(block.ToChunkPos())!;
+		var chunk     = _world.Chunks.GetChunkOrNull(block.ToChunkPos())!;
 		var (x, y, z) = block.ToChunkRelative();
 		chunk.Storage[x, y, z] = breaking ? Block.AIR : Block.STONE;
-		_world.Chunks.ForceUpdate(chunk);
+		// TODO: _world.Chunks.ForceUpdate(chunk);
 
-		foreach (var facing in BlockFacings.ALL) {
-			var neighborChunkPos = (block + facing).ToChunkPos();
-			if (neighborChunkPos == chunk.Position) continue;
+		// foreach (var facing in BlockFacings.ALL) {
+		// 	var neighborChunkPos = (block + facing).ToChunkPos();
+		// 	if (neighborChunkPos == chunk.Position) continue;
 
-			var neighborChunk = _world.Chunks.GetOrNull(neighborChunkPos);
-			if (neighborChunk != null)
-				_world.Chunks.ForceUpdate(neighborChunk);
-		}
+		// 	var neighborChunk = _world.Chunks.GetChunkOrNull(neighborChunkPos);
+		// 	if (neighborChunk != null)
+		// 		_world.Chunks.ForceUpdate(neighborChunk);
+		// }
 	}
 
 	public override void _PhysicsProcess(float delta)
