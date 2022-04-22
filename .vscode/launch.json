@@ -6,7 +6,8 @@
       "type": "godot-mono",
       "mode": "playInEditor",
       "request": "launch"
-    },{
+    },
+    {
       "name": "Launch",
       "type": "godot-mono",
       "request": "launch",
@@ -16,22 +17,31 @@
       // See which arguments are available here:
       // https://docs.godotengine.org/en/stable/getting_started/editor/command_line_tutorial.html
       "executableArguments": [ "--path", "${workspaceRoot}" ]
-    },{
-      "name": "Launch (Select Scene)",
+    },
+    // {
+    //   "name": "Launch Scene",
+    //   "type": "godot-mono",
+    //   "request": "launch",
+    //   "mode": "executable",
+    //   "preLaunchTask": "build",
+    //   "executable": "godot-mono",
+    //   "executableArguments": [ "--path", "${workspaceRoot}", "${command:SelectLaunchScene}" ]
+    // },
+    {
+      "name": "Run Tests",
       "type": "godot-mono",
       "request": "launch",
       "mode": "executable",
       "preLaunchTask": "build",
       "executable": "godot-mono",
-      // See which arguments are available here:
-      // https://docs.godotengine.org/en/stable/getting_started/editor/command_line_tutorial.html
-      "executableArguments": [ "--path", "${workspaceRoot}", "${command:SelectLaunchScene}" ]
-    },{
-      "name": "Attach",
-      "type": "godot-mono",
-      "request": "attach",
-      "address": "localhost",
-      "port": 23685
-    }
+      "executableArguments": [ "--path", "${workspaceRoot}", "${workspaceRoot}/scenes/TestRunner.tscn" ]
+    },
+    // {
+    //   "name": "Attach",
+    //   "type": "godot-mono",
+    //   "request": "attach",
+    //   "address": "localhost",
+    //   "port": 23685
+    // },
   ]
 }
