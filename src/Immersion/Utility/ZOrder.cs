@@ -29,7 +29,7 @@ namespace Immersion.Utility
 		private const int SIGN_SHIFT       = sizeof(int) * 8 - BITS_PER_ELEMENT;
 		private const long COMPARE_MASK    = ~(~0L << 3) << (MAX_USABLE_BITS - 3);
 
-		private static readonly ulong[] _masks = {
+		private static readonly ulong[] MASKS = {
 			0b_00000000_00000000_00000000_00000000_00000000_00011111_11111111_11111111, // 0x1fffff
 			0b_00000000_00011111_00000000_00000000_00000000_00000000_11111111_11111111, // 0x1f00000000ffff
 			0b_00000000_00011111_00000000_00000000_11111111_00000000_00000000_11111111, // 0x1f0000ff0000ff
@@ -38,12 +38,12 @@ namespace Immersion.Utility
 			0b_00010010_01001001_00100100_10010010_01001001_00100100_10010010_01001001, // 0x1249249249249249
 		};
 
-		private static readonly long MaskX = (long)_masks[_masks.Length - 1];
-		private static readonly long MaskY = MaskX << 1;
-		private static readonly long MaskZ = MaskX << 2;
-		private static readonly long MaskXY = MaskX | MaskY;
-		private static readonly long MaskXZ = MaskX | MaskZ;
-		private static readonly long MaskYZ = MaskY | MaskZ;
+		private static readonly long X_MASK = (long)MASKS[MASKS.Length - 1];
+		private static readonly long Y_MASK = X_MASK << 1;
+		private static readonly long Z_MASK = X_MASK << 2;
+		private static readonly long XY_MASK = X_MASK | Y_MASK;
+		private static readonly long XZ_MASK = X_MASK | Z_MASK;
+		private static readonly long YZ_MASK = Y_MASK | Z_MASK;
 
 
 		private readonly long _value;
@@ -66,28 +66,28 @@ namespace Immersion.Utility
 		public void Deconstruct(out int x, out int y, out int z)
 			=> (x, y, z) = (X, Y, Z);
 
-		public ZOrder IncX() => new((((_value | MaskYZ) + 1 << 0) & MaskX) | (_value & MaskYZ));
-		public ZOrder IncY() => new((((_value | MaskXZ) + 1 << 1) & MaskY) | (_value & MaskXZ));
-		public ZOrder IncZ() => new((((_value | MaskXY) + 1 << 2) & MaskZ) | (_value & MaskXY));
+		public ZOrder IncX() => new((((_value | YZ_MASK) +  1      ) & X_MASK) | (_value & YZ_MASK));
+		public ZOrder IncY() => new((((_value | XZ_MASK) + (1 << 1)) & Y_MASK) | (_value & XZ_MASK));
+		public ZOrder IncZ() => new((((_value | XY_MASK) + (1 << 2)) & Z_MASK) | (_value & XY_MASK));
 
-		public ZOrder DecX() => new((((_value & MaskX) - 1 << 0) & MaskX) | (_value & MaskYZ));
-		public ZOrder DecY() => new((((_value & MaskY) - 1 << 1) & MaskY) | (_value & MaskXZ));
-		public ZOrder DecZ() => new((((_value & MaskZ) - 1 << 2) & MaskZ) | (_value & MaskXY));
+		public ZOrder DecX() => new((((_value & X_MASK) -  1      ) & X_MASK) | (_value & YZ_MASK));
+		public ZOrder DecY() => new((((_value & Y_MASK) - (1 << 1)) & Y_MASK) | (_value & XZ_MASK));
+		public ZOrder DecZ() => new((((_value & Z_MASK) - (1 << 2)) & Z_MASK) | (_value & XY_MASK));
 
 		public static ZOrder operator +(ZOrder left, ZOrder right)
 		{
-			var xSum = (left._value | MaskYZ) + (right._value & MaskX);
-			var ySum = (left._value | MaskXZ) + (right._value & MaskY);
-			var zSum = (left._value | MaskXY) + (right._value & MaskZ);
-			return new((xSum & MaskX) | (ySum & MaskY) | (zSum & MaskZ));
+			var xSum = (left._value | YZ_MASK) + (right._value & X_MASK);
+			var ySum = (left._value | XZ_MASK) + (right._value & Y_MASK);
+			var zSum = (left._value | XY_MASK) + (right._value & Z_MASK);
+			return new((xSum & X_MASK) | (ySum & Y_MASK) | (zSum & Z_MASK));
 		}
 
 		public static ZOrder operator -(ZOrder left, ZOrder right)
 		{
-			var xDiff = (left._value | MaskYZ) - (right._value & MaskX);
-			var yDiff = (left._value | MaskXZ) - (right._value & MaskY);
-			var zDiff = (left._value | MaskXY) - (right._value & MaskZ);
-			return new((xDiff & MaskX) | (yDiff & MaskY) | (zDiff & MaskZ));
+			var xDiff = (left._value & X_MASK) - (right._value & X_MASK);
+			var yDiff = (left._value & Y_MASK) - (right._value & Y_MASK);
+			var zDiff = (left._value & Z_MASK) - (right._value & Z_MASK);
+			return new((xDiff & X_MASK) | (yDiff & Y_MASK) | (zDiff & Z_MASK));
 		}
 
 		public static ZOrder operator &(ZOrder left, ZOrder right)
@@ -118,30 +118,30 @@ namespace Immersion.Utility
 		public bool Equals(ZOrder other) => _value.Equals(other._value);
 		public override bool Equals(object obj) => (obj is ZOrder order) && Equals(order);
 		public override int GetHashCode() => _value.GetHashCode();
-		public override string ToString() => $"ZOrder ({X}:{Y}:{Z})";
+		public override string ToString() => $"<{X},{Y},{Z}>";
 
 
 		private static long Split(int i)
 		{
 			var l = (ulong)i;
 			// l = l & Masks[0];
-			l = (l | l << 32) & _masks[1];
-			l = (l | l << 16) & _masks[2];
-			l = (l | l <<  8) & _masks[3];
-			l = (l | l <<  4) & _masks[4];
-			l = (l | l <<  2) & _masks[5];
+			l = (l | l << 32) & MASKS[1];
+			l = (l | l << 16) & MASKS[2];
+			l = (l | l <<  8) & MASKS[3];
+			l = (l | l <<  4) & MASKS[4];
+			l = (l | l <<  2) & MASKS[5];
 			return (long)l;
 		}
 
 		private int Decode(int index)
 		{
 			var l = (ulong)_value >> index;
-			l &= _masks[5];
-			l = (l ^ (l >>  2)) & _masks[4];
-			l = (l ^ (l >>  4)) & _masks[3];
-			l = (l ^ (l >>  8)) & _masks[2];
-			l = (l ^ (l >> 16)) & _masks[1];
-			l = (l ^ (l >> 32)) & _masks[0];
+			l &= MASKS[5];
+			l = (l ^ (l >>  2)) & MASKS[4];
+			l = (l ^ (l >>  4)) & MASKS[3];
+			l = (l ^ (l >>  8)) & MASKS[2];
+			l = (l ^ (l >> 16)) & MASKS[1];
+			l = (l ^ (l >> 32)) & MASKS[0];
 			return ((int)l << SIGN_SHIFT) >> SIGN_SHIFT;
 		}
 

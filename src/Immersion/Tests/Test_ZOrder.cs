@@ -38,5 +38,29 @@ namespace Immersion.Tests
 			Assert.Equal(neg123 << 2, new ZOrder(-4, -8, -12));
 			Assert.Equal(new ZOrder(-4, -8, -12) >> 2, neg123);
 		}
+
+		[Test]
+		public static void IncAndDec()
+		{
+			var value = new ZOrder(5, 0, -200);
+
+			Assert.Equal(value.IncX(), new ZOrder(6, 0, -200));
+			Assert.Equal(value.IncY(), new ZOrder(5, 1, -200));
+			Assert.Equal(value.IncZ(), new ZOrder(5, 0, -199));
+
+			Assert.Equal(value.DecX(), new ZOrder(4,  0, -200));
+			Assert.Equal(value.DecY(), new ZOrder(5, -1, -200));
+			Assert.Equal(value.DecZ(), new ZOrder(5,  0, -201));
+		}
+
+		[Test]
+		public static void AddAndSubtract()
+		{
+			var value = new ZOrder(1, 2, 3);
+			var diff  = new ZOrder(10, -20, 0);
+
+			Assert.Equal(value + diff, new ZOrder(11, -18, 3));
+			Assert.Equal(value - diff, new ZOrder(-9, 22, 3));
+		}
 	}
 }
