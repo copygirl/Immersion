@@ -38,12 +38,12 @@ namespace Immersion.Utility
 			0b_00010010_01001001_00100100_10010010_01001001_00100100_10010010_01001001, // 0x1249249249249249
 		};
 
-		public static readonly long MaskX = (long)_masks[_masks.Length - 1];
-		public static readonly long MaskY = MaskX << 1;
-		public static readonly long MaskZ = MaskX << 2;
-		public static readonly long MaskXY = MaskX | MaskY;
-		public static readonly long MaskXZ = MaskX | MaskZ;
-		public static readonly long MaskYZ = MaskY | MaskZ;
+		private static readonly long MaskX = (long)_masks[_masks.Length - 1];
+		private static readonly long MaskY = MaskX << 1;
+		private static readonly long MaskZ = MaskX << 2;
+		private static readonly long MaskXY = MaskX | MaskY;
+		private static readonly long MaskXZ = MaskX | MaskZ;
+		private static readonly long MaskYZ = MaskY | MaskZ;
 
 
 		private readonly long _value;
