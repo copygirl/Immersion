@@ -1,7 +1,5 @@
 using System;
 using Godot;
-using Immersion.Voxel.Blocks;
-using Immersion.Voxel.Chunks;
 
 public class Player : KinematicBody
 {
@@ -26,7 +24,6 @@ public class Player : KinematicBody
 	public MovementMode Movement { get; set; } = MovementMode.Default;
 
 
-	private IWorld  _world    = null!;
 	private Spatial _rotation = null!;
 	private Camera  _camera   = null!;
 
@@ -39,53 +36,106 @@ public class Player : KinematicBody
 
 	public override void _Ready()
 	{
-		_world    = GetParent<World>() ?? throw new Exception();
 		_rotation = GetNode<Spatial>("Rotation");
 		_camera   = GetNode<Camera>("Rotation/Camera");
-		// Input.SetMouseMode(Input.MouseMode.Captured);
 	}
 
-	public override void _Process(float delta)
+	public override void _Input(InputEvent ev)
 	{
-		if (Input.IsActionJustPressed("cycle_movement_mode"))
+		// Inputs that are valid when the game is focused.
+		// ===============================================
+
+		if (ev.IsAction("move_sprint")) {
+			IsSprinting = ev.IsPressed();
+			GetTree().SetInputAsHandled();
+		}
+
+		if (ev.IsActionPressed("move_jump")) {
+			_jumpPressed = DateTime.Now;
+			GetTree().SetInputAsHandled();
+		}
+
+		// Cycle movement mode between default, flying and flying+noclip.
+		if (ev.IsActionPressed("cycle_movement_mode")) {
 			if (++Movement > MovementMode.NoClip)
 				Movement = MovementMode.Default;
-
-		var breaking = Input.IsActionJustPressed("action_break");
-		var placing  = Input.IsActionJustPressed("action_place");
-		if (breaking || placing) {
-			var rayLength = 4.0F;
-			var mousePos  = GetViewport().GetMousePosition();
-			var startPos  = _camera.ProjectRayOrigin(mousePos);
-			var endPos    = startPos + _camera.ProjectRayNormal(mousePos) * rayLength;
-
-			var result = GetWorld().DirectSpaceState.IntersectRay(startPos, endPos);
-			if (result.Count == 0) return;
-
-			var pos    = (Vector3)result["position"];
-			var normal = (Vector3)result["normal"];
-			var block  = (pos + normal * (placing ? 0.5F : -0.5F)).ToBlockPos();
-
-			var chunk     = _world.Chunks.GetChunkOrNull(block.ToChunkPos())!;
-			var (x, y, z) = block.ToChunkRelative();
-			chunk.Storage[x, y, z] = breaking ? Block.AIR : Block.STONE;
-			// TODO: _world.Chunks.ForceUpdate(chunk);
-
-			// foreach (var facing in BlockFacings.ALL) {
-			// 	var neighborChunkPos = (block + facing).ToChunkPos();
-			// 	if (neighborChunkPos == chunk.Position) continue;
-
-			// 	var neighborChunk = _world.Chunks.GetChunkOrNull(neighborChunkPos);
-			// 	if (neighborChunk != null)
-			// 		_world.Chunks.ForceUpdate(neighborChunk);
-			// }
+			GetTree().SetInputAsHandled();
 		}
+
+		// Inputs that are valid only when the mouse is captured.
+		// ======================================================
+		if (Input.GetMouseMode() == Input.MouseMode.Captured) {
+
+			if (ev.IsActionPressed("action_break"))
+			{
+				PlaceOrBreakBlock(placing: false);
+				GetTree().SetInputAsHandled();
+			}
+			if (ev.IsActionPressed("action_place"))
+			{
+				PlaceOrBreakBlock(placing: true);
+				GetTree().SetInputAsHandled();
+			}
+
+		}
+	}
+
+	public override void _UnhandledInput(InputEvent ev)
+	{
+		// When pressing escape and mouse is currently captured, release it.
+		if (ev.IsActionPressed("ui_cancel") &&
+		    Input.GetMouseMode() == Input.MouseMode.Captured)
+			Input.SetMouseMode(Input.MouseMode.Visible);
+
+		// Grab the mouse when pressing the primary mouse button.
+		// TODO: Make "primary mouse button" configurable.
+		if (ev is InputEventMouseButton button &&
+		    button.ButtonIndex == (int)ButtonList.Left)
+			Input.SetMouseMode(Input.MouseMode.Captured);
+
+		if (ev is InputEventMouseMotion motion &&
+		    Input.GetMouseMode() == Input.MouseMode.Captured)
+		{
+			_camera.RotateX(Mathf.Deg2Rad(motion.Relative.y * -MouseSensitivity));
+			_rotation.RotateY(Mathf.Deg2Rad(motion.Relative.x * -MouseSensitivity));
+
+			var rotation = _camera.RotationDegrees;
+			rotation.x = Mathf.Clamp(rotation.x, -80, 80);
+			_camera.RotationDegrees = rotation;
+		}
+	}
+
+	public void PlaceOrBreakBlock(bool placing)
+	{
+		// var rayLength = 4.0F;
+		// var mousePos  = GetViewport().GetMousePosition();
+		// var startPos  = _camera.ProjectRayOrigin(mousePos);
+		// var endPos    = startPos + _camera.ProjectRayNormal(mousePos) * rayLength;
+
+		// var result = GetWorld().DirectSpaceState.IntersectRay(startPos, endPos);
+		// if (result.Count == 0) return;
+
+		// var pos    = (Vector3)result["position"];
+		// var normal = (Vector3)result["normal"];
+		// var block  = (pos + normal * (placing ? 0.5F : -0.5F)).ToBlockPos();
+
+		// var chunk     = _world.Chunks.GetChunkOrNull(block.ToChunkPos())!;
+		// var (x, y, z) = block.ToChunkRelative();
+		// chunk.Storage[x, y, z] = placing ? Block.STONE : Block.AIR;
+
+		// _world.Chunks.ForceUpdate(chunk);
+		// foreach (var facing in BlockFacings.ALL) {
+		// 	var neighborChunkPos = (block + facing).ToChunkPos();
+		// 	if (neighborChunkPos == chunk.ChunkPos) continue;
+
+		// 	var neighborChunk = _world.Chunks.GetChunkOrNull(neighborChunkPos);
+		// 	if (neighborChunk != null)
+		// 		_world.Chunks.ForceUpdate(neighborChunk);
+		// }
 	}
 
 	public override void _PhysicsProcess(float delta)
 	{
-		IsSprinting = Input.IsActionPressed("move_sprint");
-
 		var movementVector = new Vector3(
 			Input.GetActionStrength("move_strafe_right") - Input.GetActionStrength("move_strafe_left"),
 			Input.GetActionStrength("move_upward")       - Input.GetActionStrength("move_downward"),
@@ -118,10 +168,8 @@ public class Player : KinematicBody
 			// Sometimes, when pushing into a wall, jumping wasn't working.
 			// Possibly due to `IsOnFloor` returning `false` for some reason.
 			// The `JumpEarlyTime` feature seems to avoid this issue, thankfully.
-			if (Input.IsActionJustPressed("move_jump"))
-				_jumpPressed = DateTime.Now;
-			if (IsOnFloor())
-				_lastOnFloor = DateTime.Now;
+
+			if (IsOnFloor()) _lastOnFloor = DateTime.Now;
 
 			if (((DateTime.Now - _jumpPressed) <= JumpEarlyTime)
 				&& ((DateTime.Now - _lastOnFloor) <= JumpCoyoteTime)) {
@@ -149,25 +197,5 @@ public class Player : KinematicBody
 			Translate(_velocity * delta);
 		else _velocity = MoveAndSlide(_velocity, Vector3.Up,
 			floorMaxAngle: FloorMaxAngle);
-	}
-
-	public override void _UnhandledInput(InputEvent ev)
-	{
-		if (ev.IsActionPressed("ui_cancel"))
-		{
-			Input.SetMouseMode((Input.GetMouseMode() == Input.MouseMode.Visible)
-				? Input.MouseMode.Captured : Input.MouseMode.Visible);
-		}
-		else if (ev is InputEventMouseMotion motion)
-		{
-			if (Input.GetMouseMode() != Input.MouseMode.Captured) return;
-
-			_camera.RotateX(Mathf.Deg2Rad(motion.Relative.y * -MouseSensitivity));
-			_rotation.RotateY(Mathf.Deg2Rad(motion.Relative.x * -MouseSensitivity));
-
-			var rotation = _camera.RotationDegrees;
-			rotation.x = Mathf.Clamp(rotation.x, -80, 80);
-			_camera.RotationDegrees = rotation;
-		}
 	}
 }
