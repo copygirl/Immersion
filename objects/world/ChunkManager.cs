@@ -7,12 +7,12 @@ using Immersion.Voxel.Chunks;
 
 public interface IChunkManager
 {
-	event Action<Chunk> ChunkCreated;
-	event Action<Chunk> ChunkReady;
-	event Action<Chunk> ChunkRemoved;
+	event Action<IChunk> ChunkCreated;
+	event Action<IChunk> ChunkReady;
+	event Action<IChunk> ChunkRemoved;
 
-	Chunk? GetChunkOrNull(ChunkPos pos);
-	Chunk GetChunkOrCreate(ChunkPos pos);
+	IChunk? GetChunkOrNull(ChunkPos pos);
+	IChunk GetChunkOrCreate(ChunkPos pos);
 
 	bool TryRemoveChunk(ChunkPos pos);
 	void RemoveChunk(ChunkPos pos);
@@ -24,21 +24,21 @@ public class ChunkManager
 {
 	private readonly ConcurrentDictionary<ChunkPos, Chunk> _chunks = new();
 
-	private World _world = null!;
+	private IWorld _world = null!;
 
-	public event Action<Chunk>? ChunkCreated;
-	public event Action<Chunk>? ChunkReady;
-	public event Action<Chunk>? ChunkRemoved;
+	public event Action<IChunk>? ChunkCreated;
+	public event Action<IChunk>? ChunkReady;
+	public event Action<IChunk>? ChunkRemoved;
 
 	public override void _Ready()
 	{
 		// TODO: Create a custom exception to use instead of IOE.
-		_world = GetParent<World>() ?? throw new InvalidOperationException();
+		_world = GetParent<World>() ?? throw new Exception();
 	}
 
-	public Chunk? GetChunkOrNull(ChunkPos pos)
+	public IChunk? GetChunkOrNull(ChunkPos pos)
 		=> _chunks.GetOrNull(pos);
-	public Chunk GetChunkOrCreate(ChunkPos pos)
+	public IChunk GetChunkOrCreate(ChunkPos pos)
 		=> _chunks.GetOrAdd(pos, pos => {
 			var chunk = new Chunk(_world, pos);
 			foreach (var neighbor in Neighbors.ALL)

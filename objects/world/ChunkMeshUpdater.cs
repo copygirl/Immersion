@@ -21,10 +21,10 @@ public class ChunkMeshUpdater : Node
 	private readonly ConcurrentBag<ChunkPos> _markToUpdate = new();
 	private readonly Thread _workerThread;
 
-	private World _world = null!;
-	private Camera _camera = null!;
+	private IWorld _world = null!;
 	private IChunkManager _chunks = null!;
 
+	private Camera _camera = null!;
 	private Vector3 _cameraPosition;
 
 
@@ -40,9 +40,9 @@ public class ChunkMeshUpdater : Node
 	public override void _Ready()
 	{
 		_world  = GetParent<World>();
-		_camera = GetNode<Camera>(_cameraPath) ?? throw new InvalidOperationException();
 		_chunks = _world.Chunks;
 		_chunks.ChunkReady += chunk => MarkToUpdate(chunk.ChunkPos);
+		_camera = GetNode<Camera>(_cameraPath) ?? throw new Exception();
 		_workerThread.Start();
 	}
 
@@ -98,7 +98,7 @@ public class ChunkMeshUpdater : Node
 				var chunk = _chunks.GetChunkOrNull(chunkPos);
 				if (chunk != null) {
 					var mesh = meshGen.Generate(chunk);
-					_world.Schedule(() => AddMeshToChunk(chunk, mesh));
+					_world.Schedule(() => AddMeshToChunk((Chunk)chunk, mesh));
 
 					octree.Update(chunkPos,
 						(int level, ReadOnlySpan<bool> children, ref bool parent) => {

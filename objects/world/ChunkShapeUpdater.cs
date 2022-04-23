@@ -19,10 +19,10 @@ public class ChunkShapeUpdater : Node
 	private readonly ConcurrentBag<ChunkPos> _markToUpdate = new();
 	private readonly Thread _workerThread;
 
-	private World _world = null!;
-	private Player _player = null!;
+	private IWorld _world = null!;
 	private IChunkManager _chunks = null!;
 
+	private Player _player = null!;
 	private Vector3 _playerPosition;
 
 
@@ -38,9 +38,9 @@ public class ChunkShapeUpdater : Node
 	public override void _Ready()
 	{
 		_world  = GetParent<World>();
-		_player = _world.GetNode<Player>("Player");
 		_chunks = _world.Chunks;
 		_chunks.ChunkReady += chunk => MarkToUpdate(chunk.ChunkPos);
+		_player = GetNode<Player>("../Player");
 		_workerThread.Start();
 	}
 
@@ -104,7 +104,7 @@ public class ChunkShapeUpdater : Node
 				var chunk = _chunks.GetChunkOrNull(chunkPos);
 				if (chunk != null) {
 					var shape = shapeGen.Generate(chunk);
-					_world.Schedule(() => AddShapeToChunk(chunk, shape));
+					_world.Schedule(() => AddShapeToChunk((Chunk)chunk, shape));
 
 					octree.Update(chunkPos,
 						(int level, ReadOnlySpan<bool> children, ref bool parent) => {

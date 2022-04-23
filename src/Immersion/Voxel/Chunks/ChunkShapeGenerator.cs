@@ -9,7 +9,7 @@ namespace Immersion.Voxel.Chunks
 		private readonly IBlock[] _neighbors = new IBlock[BlockFacings.ALL.Count];
 		private readonly List<Vector3> _buffer = new();
 
-		public Shape? Generate(Chunk chunk)
+		public Shape? Generate(IChunk chunk)
 		{
 			var center = chunk.Neighbors[0, 0, 0]!;
 			for (var x = 0; x < 16; x++)

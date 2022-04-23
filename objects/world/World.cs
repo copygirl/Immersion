@@ -4,8 +4,27 @@ using Godot;
 using Immersion.Voxel;
 using Thread = System.Threading.Thread;
 
-// TODO: Add IWorld interface.
-public class World : Spatial
+public interface IWorld
+{
+	IChunkManager Chunks { get; }
+
+	/// <summary>
+	/// Runs an action on the main game thread, either by invoking it
+	/// right away if the current thread is already the main thread,
+	/// or by scheduling it for execution in the next process step.
+	/// </summary>
+	void RunOrSchedule(Action action);
+
+	/// <summary>
+	/// Schedules an action to run on the main
+	/// game thread on the next process step.
+	/// </summary>
+	void Schedule(Action action);
+}
+
+public class World
+	: Spatial
+	, IWorld
 {
 	private readonly ConcurrentQueue<Action> _scheduledActions = new();
 	private readonly Thread _mainThread = Thread.CurrentThread;
@@ -26,7 +45,7 @@ public class World : Spatial
 
 	public override void _EnterTree()
 	{
-		Chunks = GetNode<ChunkManager>("ChunkManager") ?? throw new InvalidOperationException();
+		Chunks = GetNode<ChunkManager>("ChunkManager") ?? throw new Exception();
 
 		TerrainTexture.Flags = (int)Texture.FlagsEnum.ConvertToLinear;
 
@@ -45,18 +64,13 @@ public class World : Spatial
 			action();
 	}
 
-	/// <summary> Schedules an action to run on the main game thread. </summary>
-	public void Schedule(Action action)
-		=> _scheduledActions.Enqueue(action);
 
-	/// <summary>
-	/// Runs an action on the main game thread, either by invoking it
-	/// right away if the current thread is already the main thread,
-	/// or by scheduling it for execution in the next process step.
-	/// </summary>
 	public void RunOrSchedule(Action action)
 	{
 		if (Thread.CurrentThread == _mainThread) action();
 		else Schedule(action);
 	}
+
+	public void Schedule(Action action)
+		=> _scheduledActions.Enqueue(action);
 }

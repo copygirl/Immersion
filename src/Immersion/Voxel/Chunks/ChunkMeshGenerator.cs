@@ -11,7 +11,7 @@ namespace Immersion.Voxel.Chunks
 
 		public ChunkMeshGenerator(World world) => _world = world;
 
-		public ArrayMesh? Generate(Chunk chunk)
+		public ArrayMesh? Generate(IChunk chunk)
 		{
 			_surface.Begin(Mesh.PrimitiveType.Triangles);
 			_surface.SetMaterial(_world.TerrainMaterial);

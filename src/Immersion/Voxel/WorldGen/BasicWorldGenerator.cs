@@ -25,7 +25,7 @@ namespace Immersion.Voxel.WorldGen
 		public IEnumerable<(Neighbor, string)> NeighborDependencies
 			=> Enumerable.Empty<(Neighbor, string)>();
 
-		public void Populate(Chunk chunk)
+		public void Populate(IChunk chunk)
 		{
 			for (var lx = 0; lx < 16; lx++)
 			for (var ly = 0; ly < 16; ly++)

@@ -26,7 +26,7 @@ public class Player : KinematicBody
 	public MovementMode Movement { get; set; } = MovementMode.Default;
 
 
-	private World   _world    = null!;
+	private IWorld  _world    = null!;
 	private Spatial _rotation = null!;
 	private Camera  _camera   = null!;
 

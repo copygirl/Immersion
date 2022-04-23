@@ -23,10 +23,11 @@ public class WorldGenManager : Node, IWorldGenManager
 
 
 	private readonly Thread _workerThread;
-	private World _world = null!;
-	private Player _player = null!;
+
+	private IWorld _world = null!;
 	private IChunkManager _chunks = null!;
 
+	private Player _player = null!;
 	private Vector3 _playerPosition;
 
 
@@ -46,8 +47,8 @@ public class WorldGenManager : Node, IWorldGenManager
 	public override void _Ready()
 	{
 		_world  = GetParent<World>();
-		_player = _world.GetNode<Player>("Player");
 		_chunks = _world.Chunks;
+		_player = GetNode<Player>("../Player");
 		_workerThread.Start();
 	}
 
@@ -81,7 +82,7 @@ public class WorldGenManager : Node, IWorldGenManager
 
 			while (enumerator.MoveNext()) {
 				var (chunkPos, _, _) = enumerator.Current;
-				var chunk = _chunks.GetChunkOrCreate(chunkPos);
+				var chunk = (Chunk)_chunks.GetChunkOrCreate(chunkPos);
 
 				// TODO: This is cobbled together. Would not work if chunks are created outside of this class.
 				if (chunk.NumGeneratedNeighbors < 0)

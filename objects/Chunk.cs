@@ -4,9 +4,20 @@ using Immersion.Voxel;
 using Immersion.Voxel.Blocks;
 using Immersion.Voxel.Chunks;
 
-public class Chunk : Spatial
+public interface IChunk
 {
-	public World World { get; }
+	IWorld World { get; }
+	ChunkPos ChunkPos { get; }
+	ChunkNeighbors Neighbors { get; }
+	IVoxelStorage<IBlock> Storage { get; }
+	ICollection<string> AppliedGenerators { get; }
+}
+
+public class Chunk
+	: Spatial
+	, IChunk
+{
+	public IWorld World { get; }
 	public ChunkPos ChunkPos { get; }
 	public ChunkNeighbors Neighbors { get; }
 	public IVoxelStorage<IBlock> Storage { get; } = new ChunkPaletteStorage<IBlock>(Block.AIR);
@@ -15,7 +26,7 @@ public class Chunk : Spatial
 	// TODO: Replace this with something better.
 	internal int NumGeneratedNeighbors = -1;
 
-	public Chunk(World world, ChunkPos pos)
+	public Chunk(IWorld world, ChunkPos pos)
 	{
 		Name      = $"Chunk {pos}";
 		World     = world;
