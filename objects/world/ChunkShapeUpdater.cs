@@ -10,10 +10,8 @@ using Thread = System.Threading.Thread;
 
 public class ChunkShapeUpdater : Node
 {
-	private const int CHUNK_DISTANCE = 8;
-	private const int DISTANCE_SQUARED =
-		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2) *
-		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2);
+	private static readonly float DISTANCE_SQUARED
+		= Mathf.Pow((World.CHUNK_SIMULATION_DISTANCE + 0.5F) * Chunk.LENGTH, 2);
 
 
 	private readonly ConcurrentBag<ChunkPos> _markToUpdate = new();

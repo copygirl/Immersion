@@ -10,10 +10,8 @@ using Thread = System.Threading.Thread;
 
 public class ChunkMeshUpdater : Node
 {
-	private const int CHUNK_DISTANCE = 8;
-	private const int DISTANCE_SQUARED =
-		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2) *
-		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2);
+	private static readonly float DISTANCE_SQUARED
+		= Mathf.Pow((World.CHUNK_RENDER_DISTANCE + 0.5F) * Chunk.LENGTH, 2);
 
 
 	[Export] internal NodePath _cameraPath = null!;

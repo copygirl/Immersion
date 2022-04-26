@@ -26,6 +26,12 @@ public class World
 	: Spatial
 	, IWorld
 {
+	public const int CHUNK_UNLOAD_DISTANCE     = 14;
+	public const int CHUNK_LOAD_DISTANCE       = 12;
+	public const int CHUNK_RENDER_DISTANCE     = 10;
+	public const int CHUNK_SIMULATION_DISTANCE =  8;
+
+
 	private readonly ConcurrentQueue<Action> _scheduledActions = new();
 	private readonly Thread _mainThread = Thread.CurrentThread;
 

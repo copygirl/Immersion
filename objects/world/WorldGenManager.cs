@@ -16,10 +16,8 @@ public interface IWorldGenManager
 // TODO: This has to probably be worked into / split into a chunk de/serializer.
 public class WorldGenManager : Node, IWorldGenManager
 {
-	private const int CHUNK_DISTANCE = 10;
-	private const int DISTANCE_SQUARED =
-		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2) *
-		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2);
+	private static readonly float DISTANCE_SQUARED
+		= Mathf.Pow((World.CHUNK_LOAD_DISTANCE + 0.5F) * Chunk.LENGTH, 2);
 
 
 	private readonly Thread _workerThread;
