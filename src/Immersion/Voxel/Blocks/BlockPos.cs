@@ -75,9 +75,7 @@ namespace Immersion.Voxel.Blocks
 
 	public static class BlockPosExtensions
 	{
-		public static BlockPos ToBlockPos(this Vector3 self)
-			=> new(Mathf.FloorToInt(self.x),
-			       Mathf.FloorToInt(self.y),
-			       Mathf.FloorToInt(self.z));
+		public static BlockPos ToBlockPos(this Vector3 self) => new(
+			Mathf.FloorToInt(self.x), Mathf.FloorToInt(self.y), Mathf.FloorToInt(self.z));
 	}
 }

@@ -27,12 +27,12 @@ namespace Immersion.Voxel.WorldGen
 
 		public void Populate(IChunk chunk)
 		{
-			for (var lx = 0; lx < 16; lx++)
-			for (var ly = 0; ly < 16; ly++)
-			for (var lz = 0; lz < 16; lz++) {
-				var gx = chunk.ChunkPos.X << 4 | lx;
-				var gy = chunk.ChunkPos.Y << 4 | ly;
-				var gz = chunk.ChunkPos.Z << 4 | lz;
+			for (var lx = 0; lx < Chunk.LENGTH; lx++)
+			for (var ly = 0; ly < Chunk.LENGTH; ly++)
+			for (var lz = 0; lz < Chunk.LENGTH; lz++) {
+				var gx = chunk.ChunkPos.X << Chunk.BIT_SHIFT | lx;
+				var gy = chunk.ChunkPos.Y << Chunk.BIT_SHIFT | ly;
+				var gz = chunk.ChunkPos.Z << Chunk.BIT_SHIFT | lz;
 				var bias = Mathf.Clamp(gy / 64.0F - 0.5F, -0.25F, 1.0F);
 				if (_noise.GetNoise3d(gx, gy, gz) > bias)
 					chunk.Storage[lx, ly, lz] = Block.STONE;

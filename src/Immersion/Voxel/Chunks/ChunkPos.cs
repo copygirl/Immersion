@@ -20,8 +20,12 @@ namespace Immersion.Voxel.Chunks
 			=> (x, y, z) = (X, Y, Z);
 
 
-		public Vector3 GetOrigin() => new(X << 4, Y << 4, Z << 4);
-		public Vector3 GetCenter() => new((X << 4) + 8.0F, (Y << 4) + 8.0F, (Z << 4) + 8.0F);
+		public Vector3 GetOrigin() => new(
+			X << Chunk.BIT_SHIFT, Y << Chunk.BIT_SHIFT, Z << Chunk.BIT_SHIFT);
+		public Vector3 GetCenter() => new(
+			(X << Chunk.BIT_SHIFT) + Chunk.LENGTH / 2,
+			(Y << Chunk.BIT_SHIFT) + Chunk.LENGTH / 2,
+			(Z << Chunk.BIT_SHIFT) + Chunk.LENGTH / 2);
 
 
 		public ChunkPos Add(int x, int y, int z) => new(X + x, Y + y, Z + z);
@@ -66,18 +70,18 @@ namespace Immersion.Voxel.Chunks
 
 	public static class ChunkPosExtensions
 	{
-		public static ChunkPos ToChunkPos(this Vector3 pos)
-			=> new(Mathf.FloorToInt(pos.x) >> 4,
-			       Mathf.FloorToInt(pos.y) >> 4,
-			       Mathf.FloorToInt(pos.z) >> 4);
+		public static ChunkPos ToChunkPos(this Vector3 pos) => new(
+			Mathf.FloorToInt(pos.x) >> Chunk.BIT_SHIFT,
+			Mathf.FloorToInt(pos.y) >> Chunk.BIT_SHIFT,
+			Mathf.FloorToInt(pos.z) >> Chunk.BIT_SHIFT);
 
-		public static ChunkPos ToChunkPos(this BlockPos self)
-			=> new(self.X >> 4, self.Y >> 4, self.Z >> 4);
-		public static BlockPos ToChunkRelative(this BlockPos self)
-			=> new(self.X & 0b1111, self.Y & 0b1111, self.Z & 0b1111);
-		public static BlockPos ToChunkRelative(this BlockPos self, ChunkPos chunk)
-			=> new(self.X - (chunk.X << 4),
-			       self.Y - (chunk.Y << 4),
-			       self.Z - (chunk.Z << 4));
+		public static ChunkPos ToChunkPos(this BlockPos self) => new(
+			self.X >> Chunk.BIT_SHIFT, self.Y >> Chunk.BIT_SHIFT, self.Z >> Chunk.BIT_SHIFT);
+		public static BlockPos ToChunkRelative(this BlockPos self) => new(
+			self.X & Chunk.BIT_MASK, self.Y & Chunk.BIT_MASK, self.Z & Chunk.BIT_MASK);
+		public static BlockPos ToChunkRelative(this BlockPos self, ChunkPos chunk) => new(
+			self.X - (chunk.X << Chunk.BIT_SHIFT),
+			self.Y - (chunk.Y << Chunk.BIT_SHIFT),
+			self.Z - (chunk.Z << Chunk.BIT_SHIFT));
 	}
 }

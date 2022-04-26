@@ -17,6 +17,13 @@ public class Chunk
 	: Spatial
 	, IChunk
 {
+	// <summary> Length of the egde of a world chunk. </summary>
+	public const int LENGTH = 16;
+	// <summary> Amount of bit shifting to go from a BlockPos to a ChunkPos. </summary>
+	public const int BIT_SHIFT = 4;
+	// <summary> Amount of bit shifting to go from a BlockPos to a chunk-relative BlockPos. </summary>
+	public const int BIT_MASK = 0b1111;
+
 	public IWorld World { get; }
 	public ChunkPos ChunkPos { get; }
 	public ChunkNeighbors Neighbors { get; }

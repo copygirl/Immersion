@@ -11,7 +11,7 @@ namespace Immersion.Voxel.Chunks
 		: IVoxelStorage<T>
 			where T : class
 	{
-		private const int SIZE = 16 * 16 * 16;
+		private const int SIZE = Chunk.LENGTH * Chunk.LENGTH * Chunk.LENGTH;
 
 		private BitArray? _data;
 		private PaletteEntry[]? _palette;
@@ -21,9 +21,9 @@ namespace Immersion.Voxel.Chunks
 
 		public T Default { get; }
 
-		public int Width  => 16;
-		public int Height => 16;
-		public int Depth  => 16;
+		public int Width  => Chunk.LENGTH;
+		public int Height => Chunk.LENGTH;
+		public int Depth  => Chunk.LENGTH;
 
 		public T this[int x, int y, int z] {
 			get => Get(x, y, z);

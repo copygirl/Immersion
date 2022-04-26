@@ -11,9 +11,9 @@ using Thread = System.Threading.Thread;
 public class ChunkShapeUpdater : Node
 {
 	private const int CHUNK_DISTANCE = 8;
-	private const float DISTANCE_SQUARED =
-		(CHUNK_DISTANCE + 0.5F) * 16 *
-		(CHUNK_DISTANCE + 0.5F) * 16;
+	private const int DISTANCE_SQUARED =
+		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2) *
+		(CHUNK_DISTANCE * Chunk.LENGTH + Chunk.LENGTH / 2);
 
 
 	private readonly ConcurrentBag<ChunkPos> _markToUpdate = new();
@@ -84,10 +84,10 @@ public class ChunkShapeUpdater : Node
 					(level, pos, state) => {
 						if (!state) return null;
 
-						var (minX, minY, minZ) = pos << level << 4;
-						var maxX = minX + (1 << 4 << level);
-						var maxY = minY + (1 << 4 << level);
-						var maxZ = minZ + (1 << 4 << level);
+						var (minX, minY, minZ) = pos << Chunk.BIT_SHIFT << level;
+						var maxX = minX + (1 << Chunk.BIT_SHIFT << level);
+						var maxY = minY + (1 << Chunk.BIT_SHIFT << level);
+						var maxZ = minZ + (1 << Chunk.BIT_SHIFT << level);
 
 						var dx = (px < minX) ? minX - px : (px > maxX) ? maxX - px : 0.0F;
 						var dy = (py < minY) ? minY - py : (py > maxY) ? maxY - py : 0.0F;

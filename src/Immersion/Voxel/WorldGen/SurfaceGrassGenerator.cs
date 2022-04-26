@@ -3,6 +3,7 @@ using Immersion.Voxel.Blocks;
 
 namespace Immersion.Voxel.WorldGen
 {
+	// FIXME: There is an issue with this generator where it doesn't generate grass and dirt properly.
 	public class SurfaceGrassGenerator
 		: IWorldGenerator
 	{
@@ -24,18 +25,19 @@ namespace Immersion.Voxel.WorldGen
 		public void Populate(IChunk chunk)
 		{
 			var up = chunk.Neighbors[Neighbor.Up]!;
-			for (var lx = 0; lx < 16; lx++)
-			for (var lz = 0; lz < 16; lz++) {
+			for (var lx = 0; lx < Chunk.LENGTH; lx++)
+			for (var lz = 0; lz < Chunk.LENGTH; lz++) {
 				var numAirBlocks = 0;
 				var blockIndex   = 0;
-				for (var ly = 15 + AIR_BLOCKS_NEEDED; ly >= 0; ly--) {
-					var block = (ly >= 16) ? up.Storage[lx, ly - 16, lz]
-					                       : chunk.Storage[lx, ly, lz];
+				for (var ly = Chunk.LENGTH + AIR_BLOCKS_NEEDED - 1; ly >= 0; ly--) {
+					var block = (ly >= Chunk.LENGTH)
+						? up.Storage[lx, ly - Chunk.LENGTH, lz]
+					    : chunk.Storage[lx, ly, lz];
 					if (block.IsAir) {
 						numAirBlocks++;
 						blockIndex = 0;
 					} else if ((numAirBlocks >= AIR_BLOCKS_NEEDED) || (blockIndex > 0)) {
-						if (ly < 16) {
+						if (ly < Chunk.LENGTH) {
 							if (blockIndex == 0)
 								chunk.Storage[lx, ly, lz] = Block.GRASS;
 							else if (blockIndex <= DIRT_BLOCKS_BENEATH)
