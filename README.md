@@ -9,13 +9,12 @@
   - C#¹
   - Mono Debug²
   - godot-tools
-  - C# Tools for Godot³
+  - C# Tools for Godot
   - EditorConfig for VS Code
   - Todo Tree
 
 1) The *C#* extension is available as the proprietary [`ms-dotnettools.csharp`] from the *Visual Studio Marketplace*, which is incompatible with VS Codium due to its debugger's licensing (see [dotnet/core#505](https://github.com/dotnet/core/issues/505)), or as the open-source variant [`muhammad-sammy.csharp`] from the *Open VSX Registry*.
 2) *[Mono Debug]* is not available on *Open VSX Registry* (if you're using VS Codium), so you'll have to download it from the *Visual Studio Marketplace* and install it manually from the `.vsix` file.
-3) *[C# Tools for Godot]* VS Codium also requires an additional workaround on due to depending on Microsoft's proprietary C# extension (see [godotengine/godot-csharp-vscode#12](https://github.com/godotengine/godot-csharp-vscode/issues/12)).
 
 [Godot]: https://godotengine.org/download
 [.NET 6 SDK]: https://dotnet.microsoft.com/en-us/download
@@ -26,4 +25,3 @@
 [`ms-dotnettools.csharp`]: https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp
 [`muhammad-sammy.csharp`]: https://open-vsx.org/extension/muhammad-sammy/csharp
 [Mono Debug]: https://marketplace.visualstudio.com/items?itemName=ms-vscode.mono-debug
-[C# Tools for Godot]: https://marketplace.visualstudio.com/items?itemName=neikeq.godot-csharp-vscode
